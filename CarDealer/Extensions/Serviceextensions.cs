@@ -61,6 +61,8 @@ public static class ServiceExtensions
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IClaimsTransformation, PermissionClaimsTransformation>();
         services.AddScoped<IPublicShareService, PublicShareService>();
+        services.AddScoped<IExpenseService, ExpenseService>();
+        services.AddScoped<IExpenseCategoryService, ExpenseCategoryService>();
         return services;
     }
 

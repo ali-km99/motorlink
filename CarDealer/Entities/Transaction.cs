@@ -9,5 +9,6 @@
         public int RelatedId { get; set; }
         public string? Description { get; set; }
         public DateTime Date { get; set; } = DateTime.UtcNow;
+        public bool IsDeleted { get; set; } = false;
     }
 }

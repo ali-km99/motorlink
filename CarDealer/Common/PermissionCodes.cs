@@ -24,4 +24,10 @@ public static class PermissionCodes
     public const string TransactionsView = "Transactions.View";
     public const string CarsShare = "Cars.Share";
     public const string UsersManage = "Users.Manage"; // إدارة المستخدمين والصلاحيات نفسها
+
+    // ───  صلاحيات المصروفات ─────────────────────────────────────────
+    public const string ExpensesView = "Expenses.View";
+    public const string ExpensesCreate = "Expenses.Create";
+    public const string ExpensesUpdate = "Expenses.Update";
+    public const string ExpensesDelete = "Expenses.Delete";
 }

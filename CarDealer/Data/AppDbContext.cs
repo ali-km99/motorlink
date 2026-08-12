@@ -24,6 +24,8 @@ public class AppDbContext : DbContext
     public DbSet<PublicShare> PublicShares => Set<PublicShare>();
     public DbSet<ShareView> ShareViews => Set<ShareView>();
     public DbSet<ShareContact> ShareContacts => Set<ShareContact>();
+    public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -161,6 +163,7 @@ public class AppDbContext : DbContext
 
             e.HasIndex(x => x.Type);
             e.HasIndex(x => x.Date);
+            e.HasQueryFilter(x => !x.IsDeleted);
         }); 
         // ─── AppUser ───────────────────────────────────────────────────────
         modelBuilder.Entity<AppUser>(e =>
@@ -232,6 +235,32 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.ShareId);
         });
 
+
+        // ─── ExpenseCategory ───────────────────────────────────────────────
+        modelBuilder.Entity<ExpenseCategory>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.HasIndex(x => x.Name).IsUnique();
+        });
+
+        // ─── Expense ───────────────────────────────────────────────────────
+        modelBuilder.Entity<Expense>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Amount).HasColumnType("decimal(18,2)");
+            e.Property(x => x.Description).HasMaxLength(500);
+
+            e.HasOne(x => x.Category)
+             .WithMany(c => c.Expenses)
+             .HasForeignKey(x => x.CategoryId)
+             .OnDelete(DeleteBehavior.Restrict); // منع حذف تصنيف مستخدم في مصروفات
+
+            e.HasQueryFilter(x => !x.IsDeleted);
+            e.HasIndex(x => x.CategoryId);
+            e.HasIndex(x => x.Date);
+        });
+
         // Seed كل الصلاحيات الممكنة بالنظام
         modelBuilder.Entity<Permission>().HasData(
             new Permission { Id = 1, Code = PermissionCodes.CarsView, Name = "عرض السيارات", Category = "Cars" },
@@ -252,7 +281,11 @@ public class AppDbContext : DbContext
             new Permission { Id = 14, Code = PermissionCodes.TransactionsView, Name = "عرض المعاملات المالية", Category = "Transactions" },
             new Permission { Id = 18, Code = PermissionCodes.CarsShare, Name = "مشاركة ومتابعة روابط السيارات", Category = "Cars" },
             new Permission { Id = 19, Code = PermissionCodes.DashboardView, Name = "عرض لوحة التحكم", Category = "Dashboard" },
-            new Permission { Id = 15, Code = PermissionCodes.UsersManage, Name = "إدارة المستخدمين والصلاحيات", Category = "Users" }
+            new Permission { Id = 15, Code = PermissionCodes.UsersManage, Name = "إدارة المستخدمين والصلاحيات", Category = "Users" },
+            new Permission { Id = 20, Code = PermissionCodes.ExpensesView, Name = "عرض المصروفات", Category = "Expenses" },
+            new Permission { Id = 21, Code = PermissionCodes.ExpensesCreate, Name = "إضافة مصروف", Category = "Expenses" },
+            new Permission { Id = 22, Code = PermissionCodes.ExpensesUpdate, Name = "تعديل مصروف", Category = "Expenses" },
+            new Permission { Id = 23, Code = PermissionCodes.ExpensesDelete, Name = "حذف مصروف", Category = "Expenses" }
         );
 
 
