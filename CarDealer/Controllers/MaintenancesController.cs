@@ -1,5 +1,6 @@
-﻿using CarDealer.API.DTOs;
-using CarDealer.API.DTOs.Car;
+﻿using CarDealer.API.Authorization;
+using CarDealer.API.Common;
+using CarDealer.API.DTOs;
 using CarDealer.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,7 @@ public class MaintenancesController : ControllerBase
 
     // GET /api/cars/5/maintenances
     [HttpGet]
+    [HasPermission(PermissionCodes.MaintenanceView)]
     [ProducesResponseType(typeof(ApiResponse<List<MaintenanceDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByCar(int carId)
     {
@@ -30,11 +32,11 @@ public class MaintenancesController : ControllerBase
 
     // POST /api/cars/5/maintenances
     [HttpPost]
+    [HasPermission(PermissionCodes.MaintenanceCreate)]
     [ProducesResponseType(typeof(ApiResponse<MaintenanceDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create(int carId, [FromBody] CreateMaintenanceDto dto)
     {
-        // Ensure the carId in the route matches the DTO
         var dtoWithCarId = dto with { CarId = carId };
         var created = await _maintenanceService.CreateAsync(dtoWithCarId);
 
@@ -42,9 +44,8 @@ public class MaintenancesController : ControllerBase
             ApiResponse<MaintenanceDto>.Ok(created, "Maintenance record created successfully."));
     }
 
-
-
     [HttpPut("{id}")]
+    [HasPermission(PermissionCodes.MaintenanceUpdate)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMaintenanceDto dto)
     {
         var result = await _maintenanceService.UpdateAsync(id, dto);
@@ -54,6 +55,7 @@ public class MaintenancesController : ControllerBase
 
     // DELETE /api/cars/5/maintenances/3
     [HttpDelete("{id:int}")]
+    [HasPermission(PermissionCodes.MaintenanceDelete)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int carId, int id)

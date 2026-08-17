@@ -38,6 +38,8 @@ public static class ServiceExtensions
     {
         services.AddScoped<ICarRepository, CarRepository>();
         services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
+        services.AddScoped<IMaintenanceCenterRepository, MaintenanceCenterRepository>();
+        services.AddScoped<IMaintenancePaymentRepository, MaintenancePaymentRepository>();
         services.AddScoped<ISaleRepository, SaleRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IPublicShareRepository, PublicShareRepository>();
@@ -50,6 +52,7 @@ public static class ServiceExtensions
         services.AddScoped<ICarService, CarService>();
         services.AddScoped<ICarImageService, CarImageService>();
         services.AddScoped<IMaintenanceService, MaintenanceService>();
+        services.AddScoped<IMaintenanceCenterService, MaintenanceCenterService>();
         services.AddScoped<ISaleService, SaleService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IDashboardService, DashboardService>();

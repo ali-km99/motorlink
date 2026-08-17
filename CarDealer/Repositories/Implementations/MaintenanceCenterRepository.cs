@@ -1,0 +1,31 @@
+using CarDealer.API.Data;
+using CarDealer.API.Entities;
+using CarDealer.API.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
+namespace CarDealer.API.Repositories;
+
+public class MaintenanceCenterRepository : Repository<MaintenanceCenter>, IMaintenanceCenterRepository
+{
+    public MaintenanceCenterRepository(AppDbContext context) : base(context) { }
+
+    public override async Task<List<MaintenanceCenter>> GetAllAsync() =>
+        await _context.MaintenanceCenters
+            .AsNoTracking()
+            .OrderBy(c => c.Name)
+            .ToListAsync();
+
+    public async Task<bool> ExistsByNameAsync(string name, int? excludeId = null)
+    {
+        var query = _context.MaintenanceCenters
+            .Where(c => c.Name.ToLower() == name.ToLower());
+
+        if (excludeId.HasValue)
+            query = query.Where(c => c.Id != excludeId.Value);
+
+        return await query.AnyAsync();
+    }
+
+    public async Task<bool> HasMaintenancesAsync(int centerId) =>
+        await _context.Maintenances.AnyAsync(m => m.MaintenanceCenterId == centerId);
+}

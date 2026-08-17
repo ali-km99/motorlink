@@ -45,33 +45,17 @@ namespace CarDealer.API.Services.Implementations
                 .Distinct()
                 .ToList();
 
-            // ─── تكلفة الصيانة الفعلية من Transactions (لكل سيارة على حدة، ولإجمالي المباعة) ──
-            var maintenancesForSoldCars = await _context.Maintenances
-                .Where(m => soldCarIds.Contains(m.CarId))
-                .Select(m => new { m.Id, m.CarId })
-                .ToListAsync();
+            var maintenanceCostByCarId = soldCarIds.Count > 0
+                ? await _context.Maintenances
+                    .Where(m => soldCarIds.Contains(m.CarId))
+                    .GroupBy(m => m.CarId)
+                    .Select(g => new { CarId = g.Key, Total = g.Sum(m => m.RepairCost) })
+                    .ToDictionaryAsync(x => x.CarId, x => x.Total)
+                : new Dictionary<int, decimal>();
 
-            var maintenanceIdsForSoldCars = maintenancesForSoldCars.Select(m => m.Id).ToList();
+            var totalRepairsFromMaintenances = maintenanceCostByCarId.Values.Sum();
 
-            var maintenanceTransactions = maintenanceIdsForSoldCars.Count > 0
-                ? await _context.Transactions
-                    .Where(t => t.RelatedEntity == "Maintenance" && maintenanceIdsForSoldCars.Contains(t.RelatedId))
-                    .ToListAsync()
-                : new List<Entities.Transaction>();
-
-            // خريطة: CarId → إجمالي تكلفة صيانته (من Transactions)
-            var maintenanceCostByCarId = maintenancesForSoldCars
-                .GroupBy(m => m.CarId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => maintenanceTransactions
-                        .Where(t => g.Select(m => m.Id).Contains(t.RelatedId))
-                        .Sum(t => t.Amount)
-                );
-
-            var totalRepairsFromTransactions = maintenanceCostByCarId.Values.Sum();
-
-            var totalProfit = totalRevenue - totalCostPrice - totalShipping - totalRepairsFromTransactions;
+            var totalProfit = totalRevenue - totalCostPrice - totalShipping - totalRepairsFromMaintenances;
 
             var totalMaintenanceCost = await _context.Transactions
                 .Where(t => t.RelatedEntity == "Maintenance")

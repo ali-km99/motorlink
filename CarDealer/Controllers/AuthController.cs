@@ -39,23 +39,23 @@ public class AuthController : ControllerBase
 
     // POST /api/auth/register
 
-    //[HttpPost("register")]
-    //[AllowAnonymous]
-    //[ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status201Created)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //public async Task<IActionResult> Register([FromBody] RegisterDto dto)
-    //{
-    //    try
-    //    {
-    //        var result = await _authService.RegisterAsync(dto);
-    //        return StatusCode(StatusCodes.Status201Created,
-    //            ApiResponse<AuthResponseDto>.Ok(result, "Registration successful."));
-    //    }
-    //    catch (InvalidOperationException ex)
-    //    {
-    //        return BadRequest(ApiResponse<object>.Fail(ex.Message));
-    //    }
-    //}
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+    {
+        try
+        {
+            var result = await _authService.RegisterAsync(dto);
+            return StatusCode(StatusCodes.Status201Created,
+                ApiResponse<AuthResponseDto>.Ok(result, "Registration successful."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
 
     // POST /api/auth/refresh
     [HttpPost("refresh")]

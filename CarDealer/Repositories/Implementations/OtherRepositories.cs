@@ -6,29 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarDealer.API.Repositories;
 
-// ─── Maintenance Repository ────────────────────────────────────────────────────
-
-public class MaintenanceRepository : Repository<Maintenance>, IMaintenanceRepository
-{
-    public MaintenanceRepository(AppDbContext context) : base(context) { }
-
-    public async Task<List<Maintenance>> GetByCarIdAsync(int carId) =>
-        await _context.Maintenances
-            .AsNoTracking()
-            .Where(m => m.CarId == carId)
-            .OrderByDescending(m => m.CreatedAt)
-            .ToListAsync();
-
-    public async Task<decimal> GetTotalCostByCarIdAsync(int carId) =>
-        await _context.Maintenances
-            .Where(m => m.CarId == carId)
-            .SumAsync(m => (decimal?)m.RepairCost) ?? 0;
-
-    public async Task<Maintenance?> GetTrackedByIdAsync(int id) =>
-    await _context.Maintenances
-        .FirstOrDefaultAsync(m => m.Id == id);
-}
-
 // ─── Sale Repository ───────────────────────────────────────────────────────────
 
 public class SaleRepository : Repository<Sale>, ISaleRepository

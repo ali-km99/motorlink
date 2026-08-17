@@ -158,24 +158,6 @@ public class UpdateCustomerValidator : AbstractValidator<UpdateCustomerDto>
     }
 }
 
-// ─── Maintenance ──────────────────────────────────────────────────────────────
-
-public class CreateMaintenanceValidator : AbstractValidator<CreateMaintenanceDto>
-{
-    public CreateMaintenanceValidator()
-    {
-        RuleFor(x => x.IssueDescription)
-        .NotEmpty().WithMessage("Issue description is required.")
-        .MaximumLength(500);
-
-
-    RuleFor(x => x.RepairCost)
-        .GreaterThanOrEqualTo(0).WithMessage("Repair cost cannot be negative.");
-    }
-
-
-}
-
 // ─── Feature ──────────────────────────────────────────────────────────────────
 
 public class CreateFeatureValidator : AbstractValidator<CreateFeatureDto>

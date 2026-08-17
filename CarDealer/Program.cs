@@ -40,7 +40,8 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5173",  // Vue dev
-                "https://shirmeet.ly"     // production
+                "https://shirmeet.ly" ,    // production
+                "https://motorlink.runasp.net/"  // production test
             )
             .AllowAnyHeader()
             .AllowAnyMethod();

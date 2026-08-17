@@ -102,7 +102,8 @@ public class CarRepository : Repository<Car>, ICarRepository
             .Include(c => c.Status)
             .Include(c => c.Images)
             .Include(c => c.CarFeatures).ThenInclude(cf => cf.Feature)
-            .Include(c => c.Maintenances)
+            .Include(c => c.Maintenances).ThenInclude(m => m.MaintenanceCenter)
+            .Include(c => c.Maintenances).ThenInclude(m => m.Payments)
             .Include(c => c.Sale).ThenInclude(s => s != null ? s.Customer : null!)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);

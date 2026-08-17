@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<Feature> Features => Set<Feature>();
     public DbSet<CarFeature> CarFeatures => Set<CarFeature>();
     public DbSet<Maintenance> Maintenances => Set<Maintenance>();
+    public DbSet<MaintenanceCenter> MaintenanceCenters => Set<MaintenanceCenter>();
+    public DbSet<MaintenancePayment> MaintenancePayments => Set<MaintenancePayment>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Sale> Sales => Set<Sale>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
@@ -107,6 +109,15 @@ public class AppDbContext : DbContext
             e.HasIndex(x => new { x.CarId, x.FeatureId }).IsUnique();
         });
 
+        // ─── MaintenanceCenter ─────────────────────────────────────────────
+        modelBuilder.Entity<MaintenanceCenter>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Notes).HasMaxLength(500);
+            e.HasIndex(x => x.Name).IsUnique();
+        });
+
         // ─── Maintenance ───────────────────────────────────────────────────
         modelBuilder.Entity<Maintenance>(e =>
         {
@@ -117,9 +128,33 @@ public class AppDbContext : DbContext
             e.HasOne(x => x.Car)
              .WithMany(x => x.Maintenances)
              .HasForeignKey(x => x.CarId)
-             .OnDelete(DeleteBehavior.Cascade)
-            .IsRequired(false);
+             .OnDelete(DeleteBehavior.Restrict)
+             .IsRequired(false);
+
+            e.HasOne(x => x.MaintenanceCenter)
+             .WithMany(x => x.Maintenances)
+             .HasForeignKey(x => x.MaintenanceCenterId)
+             .OnDelete(DeleteBehavior.Restrict);
+
             e.HasIndex(x => x.CarId);
+            e.HasIndex(x => x.MaintenanceCenterId);
+            e.HasIndex(x => new { x.MaintenanceCenterId, x.CreatedAt });
+        });
+
+        // ─── MaintenancePayment ────────────────────────────────────────────
+        modelBuilder.Entity<MaintenancePayment>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Amount).HasColumnType("decimal(18,2)");
+            e.Property(x => x.Notes).HasMaxLength(500);
+
+            e.HasOne(x => x.Maintenance)
+             .WithMany(x => x.Payments)
+             .HasForeignKey(x => x.MaintenanceId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasIndex(x => x.MaintenanceId);
+            e.HasIndex(x => x.PaymentDate);
         });
 
         // ─── Customer ──────────────────────────────────────────────────────

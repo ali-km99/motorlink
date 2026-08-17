@@ -93,8 +93,8 @@ namespace CarDealer.API.Services.Implementations
                 RelatedEntity = "Sale",
                 RelatedId = sale.Id,
                 Description = profit >= 0
-                    ? $"Profit from sale of {car.Brand} {car.Model} {car.Year}"
-                    : $"Loss from sale of {car.Brand} {car.Model} {car.Year}",
+                    ? $"الربح من بيع سيارة : {car.Brand} {car.Model} {car.Year}"
+                    : $"خسارة من بيع سيارة : {car.Brand} {car.Model} {car.Year}",
                 Date = DateTime.UtcNow
             });
 

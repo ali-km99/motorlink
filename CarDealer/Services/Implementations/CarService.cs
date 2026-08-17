@@ -12,6 +12,7 @@ namespace CarDealer.API.Services.Implementations
     {
         private readonly ICarRepository _carRepo;
         private readonly IMaintenanceRepository _maintenanceRepo;
+        private readonly IMaintenancePaymentRepository _paymentRepo;
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<CarService> _logger;
@@ -19,12 +20,14 @@ namespace CarDealer.API.Services.Implementations
         public CarService(
             ICarRepository carRepo,
             IMaintenanceRepository maintenanceRepo,
+            IMaintenancePaymentRepository paymentRepo,
             AppDbContext context,
             IWebHostEnvironment env,
             ILogger<CarService> logger)
         {
             _carRepo = carRepo;
             _maintenanceRepo = maintenanceRepo;
+            _paymentRepo = paymentRepo;
             _context = context;
             _env = env;
             _logger = logger;
@@ -66,8 +69,10 @@ namespace CarDealer.API.Services.Implementations
                 car.StatusId, car.Status.Name, car.Notes, car.CreatedAt,
                 car.Images.Select(i => new CarImageDto(i.Id, i.ImageUrl, i.IsPrimary)).ToList(),
                 featuresGrouped,
-                car.Maintenances.Select(m => new MaintenanceDto(
-                    m.Id, m.CarId, m.IssueDescription, m.RepairCost, m.CreatedAt)).ToList(),
+                car.Maintenances
+                    .OrderByDescending(m => m.CreatedAt)
+                    .Select(MaintenanceMapping.ToDto)
+                    .ToList(),
                 car.Sale is null ? null : new SaleInfoDto(
                     car.Sale.Id, car.Sale.Customer.Name,
                     car.Sale.Customer.Phone, car.Sale.SoldPrice, car.Sale.SoldDate)
@@ -132,7 +137,7 @@ namespace CarDealer.API.Services.Implementations
                     Amount = totalCost,
                     RelatedEntity = "Car",
                     RelatedId = car.Id,
-                    Description = $"Purchase cost of {car.Brand} {car.Model} {car.Year}",
+                    Description = $"تكلفة شراء سيارة {car.Brand} {car.Model} {car.Year}",
                     Date = DateTime.UtcNow
                 });
 
@@ -149,52 +154,146 @@ namespace CarDealer.API.Services.Implementations
 
         public async Task<bool> UpdateCarAsync(int id, UpdateCarDto dto)
         {
-            var car = await _context.Cars
-                .Include(c => c.CarFeatures)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-            if (car is null) return false;
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction =
+                    await _context.Database.BeginTransactionAsync();
 
-            // ─── تحديث الحقول ─────────────────────────────────────────────────
-            car.Brand = dto.Brand;
-            car.Model = dto.Model;
-            car.Year = dto.Year;
-            car.ExteriorColor = dto.ExteriorColor;
-            car.InteriorColor = dto.InteriorColor;
-            car.CostPrice = dto.CostPrice;
-            car.ShippingCost = dto.ShippingCost;
-            car.SellingPrice = dto.SellingPrice;
-            car.StatusId = dto.StatusId;
-            car.Notes = dto.Notes;
-            car.VinNumber = dto.VinNumber;
-            car.Mileage = dto.Mileage;
-            car.MileageUnit = dto.MileageUnit;
-            car.BodyType = dto.BodyType;
-            car.NumberOfSeats = dto.NumberOfSeats;
-            car.Transmission = dto.Transmission;
-            car.Condition = dto.Condition;
-            car.FuelType = dto.FuelType;
-            car.Specs = dto.Specs;
-            car.EngineSize = dto.EngineSize;
-            car.BodyCondition = dto.BodyCondition;
-            car.HasLicense = dto.HasLicense;
-            car.HasInsurance = dto.HasInsurance;
-            car.HasCustomsClearance = dto.HasCustomsClearance;
-            car.PaymentMethod = dto.PaymentMethod;
+                try
+                {
+                    var car = await _context.Cars
+                        .Include(c => c.CarFeatures)
+                        .FirstOrDefaultAsync(c => c.Id == id);
 
-            // ─── تحديث Features ────────────────────────────────────────────────
-            var incomingIds = dto.FeatureIds?.Distinct().ToList() ?? new List<int>();
-            var existingIds = car.CarFeatures.Select(cf => cf.FeatureId).ToList();
+                    if (car is null)
+                        return false;
 
-            var toRemove = car.CarFeatures.Where(cf => !incomingIds.Contains(cf.FeatureId)).ToList();
-            var toAdd = incomingIds.Where(fId => !existingIds.Contains(fId))
-                                      .Select(fId => new CarFeature { CarId = id, FeatureId = fId })
-                                      .ToList();
+                    // حفظ القيم القديمة قبل التعديل
+                    var oldCostPrice = car.CostPrice;
+                    var oldShippingCost = car.ShippingCost;
 
-            _context.CarFeatures.RemoveRange(toRemove);
-            await _context.CarFeatures.AddRangeAsync(toAdd);
-            await _context.SaveChangesAsync();
-            return true;
+                    // ─────────────────────────────────────────────
+                    // تحديث بيانات السيارة
+                    // ─────────────────────────────────────────────
+
+                    car.Brand = dto.Brand;
+                    car.Model = dto.Model;
+                    car.Year = dto.Year;
+                    car.ExteriorColor = dto.ExteriorColor;
+                    car.InteriorColor = dto.InteriorColor;
+                    car.CostPrice = dto.CostPrice;
+                    car.ShippingCost = dto.ShippingCost;
+                    car.SellingPrice = dto.SellingPrice;
+                    car.StatusId = dto.StatusId;
+                    car.Notes = dto.Notes;
+                    car.VinNumber = dto.VinNumber;
+                    car.Mileage = dto.Mileage;
+                    car.MileageUnit = dto.MileageUnit;
+                    car.BodyType = dto.BodyType;
+                    car.NumberOfSeats = dto.NumberOfSeats;
+                    car.Transmission = dto.Transmission;
+                    car.Condition = dto.Condition;
+                    car.FuelType = dto.FuelType;
+                    car.Specs = dto.Specs;
+                    car.EngineSize = dto.EngineSize;
+                    car.BodyCondition = dto.BodyCondition;
+                    car.HasLicense = dto.HasLicense;
+                    car.HasInsurance = dto.HasInsurance;
+                    car.HasCustomsClearance = dto.HasCustomsClearance;
+                    car.PaymentMethod = dto.PaymentMethod;
+
+                    // ─────────────────────────────────────────────
+                    // تحديث Features
+                    // ─────────────────────────────────────────────
+
+                    var incomingIds =
+                        dto.FeatureIds?.Distinct().ToList()
+                        ?? new List<int>();
+
+                    var existingIds =
+                        car.CarFeatures
+                            .Select(cf => cf.FeatureId)
+                            .ToList();
+
+                    var toRemove = car.CarFeatures
+                        .Where(cf => !incomingIds.Contains(cf.FeatureId))
+                        .ToList();
+
+                    var toAdd = incomingIds
+                        .Where(featureId => !existingIds.Contains(featureId))
+                        .Select(featureId => new CarFeature
+                        {
+                            CarId = id,
+                            FeatureId = featureId
+                        })
+                        .ToList();
+
+                    _context.CarFeatures.RemoveRange(toRemove);
+
+                    if (toAdd.Count > 0)
+                        await _context.CarFeatures.AddRangeAsync(toAdd);
+
+                    // ─────────────────────────────────────────────
+                    // تحديث Transaction الخاصة بالسيارة
+                    // ─────────────────────────────────────────────
+
+                    var costChanged =
+                        oldCostPrice != car.CostPrice ||
+                        oldShippingCost != car.ShippingCost;
+
+                    if (costChanged)
+                    {
+                        var carTransaction = await _context.Transactions
+                            .FirstOrDefaultAsync(t =>
+                                t.RelatedEntity == "Car" &&
+                                t.RelatedId == car.Id &&
+                                t.Type == "Expense");
+
+                        if (carTransaction is not null)
+                        {
+                            var totalCost =
+                                car.CostPrice + car.ShippingCost;
+
+                            carTransaction.Amount = totalCost;
+
+                            carTransaction.Description =
+                                $"تكلفة شراء سيارة {car.Brand} {car.Model} {car.Year}";
+
+                            carTransaction.Date = DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            // في حالة وجود سيارة قديمة بدون Transaction
+                            var totalCost =
+                                car.CostPrice + car.ShippingCost;
+
+                            _context.Transactions.Add(new Entities.Transaction
+                            {
+                                Type = "Expense",
+                                Amount = totalCost,
+                                RelatedEntity = "Car",
+                                RelatedId = car.Id,
+                                Description =
+                                    $"تكلفة شراء سيارة {car.Brand} {car.Model} {car.Year}",
+                                Date = DateTime.UtcNow
+                            });
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return true;
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
         }
 
         public async Task<bool> DeleteCarAsync(int id)
@@ -211,22 +310,25 @@ namespace CarDealer.API.Services.Implementations
                 if (car == null)
                     return false;
 
-                // جلب Ids الصيانات المرتبطة بالسيارة (قبل حذفها)
+                if (await _paymentRepo.HasPaymentsForCarAsync(id))
+                    throw new InvalidOperationException(
+                        "لا يمكن حذف السيارة لأنها تحتوي على دفعات صيانة مسجلة");
+
                 var maintenanceIds = await _context.Maintenances
                     .Where(m => m.CarId == id)
                     .Select(m => m.Id)
                     .ToListAsync();
 
-                // حذف نهائي للمعاملات المالية المرتبطة (بالسيارة أو بصياناتها)
                 await _context.Transactions
-                    .Where(t =>
-                        (t.RelatedEntity == "Car" && t.RelatedId == id) ||
-                        (t.RelatedEntity == "Maintenance" && maintenanceIds.Contains(t.RelatedId)))
+                    .Where(t => t.RelatedEntity == "Car" && t.RelatedId == id)
                     .ExecuteDeleteAsync();
 
-                // حذف نهائي لسجلات الصيانة
                 if (maintenanceIds.Count > 0)
                 {
+                    await _context.Transactions
+                        .Where(t => t.RelatedEntity == "Maintenance" && maintenanceIds.Contains(t.RelatedId))
+                        .ExecuteUpdateAsync(t => t.SetProperty(x => x.IsDeleted, true));
+
                     await _context.Maintenances
                         .Where(m => maintenanceIds.Contains(m.Id))
                         .ExecuteDeleteAsync();
