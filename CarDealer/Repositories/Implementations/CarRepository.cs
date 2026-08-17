@@ -105,6 +105,7 @@ public class CarRepository : Repository<Car>, ICarRepository
             .Include(c => c.Maintenances).ThenInclude(m => m.MaintenanceCenter)
             .Include(c => c.Maintenances).ThenInclude(m => m.Payments)
             .Include(c => c.Sale).ThenInclude(s => s != null ? s.Customer : null!)
+            .AsSplitQuery()
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
     }
