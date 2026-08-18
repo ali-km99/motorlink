@@ -12,7 +12,9 @@
         decimal TotalProfit,
         decimal TotalMaintenanceCost,
         List<MonthlySalesDto> MonthlySales,
-        List<RecentSaleDto> RecentSales
+        List<RecentSaleDto> RecentSales,
+        decimal TotalMaintenanceDebt,
+        List<TopMaintenanceDebtDto> TopMaintenanceDebts
     );
 
     public record MonthlySalesDto(
@@ -27,5 +29,16 @@
         decimal SoldPrice,
         decimal Profit,
         DateTime SoldDate
+    );
+
+    // ─── Maintenance Debt Widgets (Dashboard) ─────────────────────────────────────
+
+    public record TopMaintenanceDebtDto(
+        int MaintenanceId,
+        string CarLabel,
+        string MaintenanceCenterName,
+        decimal RepairCost,
+        decimal RemainingAmount,
+        DateTime CreatedAt
     );
 }

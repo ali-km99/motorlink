@@ -1,3 +1,4 @@
+using CarDealer.API.Data;
 using CarDealer.API.DTOs;
 using CarDealer.API.Entities;
 using CarDealer.API.Repositories.Interfaces;
@@ -8,8 +9,13 @@ namespace CarDealer.API.Services.Implementations;
 public class MaintenanceCenterService : IMaintenanceCenterService
 {
     private readonly IMaintenanceCenterRepository _repo;
+    private readonly AppDbContext _context;
 
-    public MaintenanceCenterService(IMaintenanceCenterRepository repo) => _repo = repo;
+    public MaintenanceCenterService(IMaintenanceCenterRepository repo, AppDbContext context)
+    {
+        _repo = repo;
+        _context = context;
+    }
 
     public async Task<List<MaintenanceCenterDto>> GetAllAsync()
     {
@@ -19,7 +25,7 @@ public class MaintenanceCenterService : IMaintenanceCenterService
 
     public async Task<MaintenanceCenterDto?> GetByIdAsync(int id)
     {
-        var center = await _repo.GetByIdAsync(id);
+        var center = await _repo.GetByIdWithPhonesAsync(id);
         return center is null ? null : ToDto(center);
     }
 
@@ -30,11 +36,25 @@ public class MaintenanceCenterService : IMaintenanceCenterService
         if (await _repo.ExistsByNameAsync(name))
             throw new InvalidOperationException($"مركز الصيانة '{name}' موجود مسبقاً.");
 
+        ValidatePhones(dto.Phones);
+
         var center = new MaintenanceCenter
         {
             Name = name,
             Notes = dto.Notes
         };
+
+        if (dto.Phones?.Any() == true)
+        {
+            center.Phones = dto.Phones
+                .Select((p, index) => new MaintenanceCenterPhone
+                {
+                    Label = p.Label.Trim(),
+                    PhoneNumber = p.PhoneNumber.Trim(),
+                    DisplayOrder = index
+                })
+                .ToList();
+        }
 
         await _repo.AddAsync(center);
         await _repo.SaveChangesAsync();
@@ -44,7 +64,7 @@ public class MaintenanceCenterService : IMaintenanceCenterService
 
     public async Task<MaintenanceCenterDto?> UpdateAsync(int id, UpdateMaintenanceCenterDto dto)
     {
-        var center = await _repo.GetByIdAsync(id);
+        var center = await _repo.GetByIdWithPhonesAsync(id);
         if (center is null)
             return null;
 
@@ -53,11 +73,28 @@ public class MaintenanceCenterService : IMaintenanceCenterService
         if (await _repo.ExistsByNameAsync(name, id))
             throw new InvalidOperationException($"مركز الصيانة '{name}' موجود مسبقاً.");
 
+        ValidatePhones(dto.Phones);
+
         center.Name = name;
         center.Notes = dto.Notes;
 
-        await _repo.UpdateAsync(center);
-        await _repo.SaveChangesAsync();
+        // ─── استبدال كامل لأرقام الهواتف (Replace-All Pattern) ─────────────
+        // نفس النمط المستخدم مع UpdateUserPermissionsAsync — أبسط وأضمن من مقارنة Diff
+        _context.MaintenanceCenterPhones.RemoveRange(center.Phones);
+
+        center.Phones = dto.Phones?.Any() == true
+            ? dto.Phones
+                .Select((p, index) => new MaintenanceCenterPhone
+                {
+                    MaintenanceCenterId = center.Id,
+                    Label = p.Label.Trim(),
+                    PhoneNumber = p.PhoneNumber.Trim(),
+                    DisplayOrder = index
+                })
+                .ToList()
+            : new List<MaintenanceCenterPhone>();
+
+        await _context.SaveChangesAsync();
 
         return ToDto(center);
     }
@@ -72,11 +109,33 @@ public class MaintenanceCenterService : IMaintenanceCenterService
             throw new InvalidOperationException(
                 "لا يمكن حذف مركز صيانة مرتبط بعمليات صيانة");
 
+        // أرقام الهواتف تُحذف تلقائياً عبر Cascade Delete على مستوى قاعدة البيانات
         await _repo.DeleteAsync(center);
         await _repo.SaveChangesAsync();
         return true;
     }
 
+    private static void ValidatePhones(List<CreateMaintenanceCenterPhoneDto>? phones)
+    {
+        if (phones is null) return;
+
+        foreach (var p in phones)
+        {
+            if (string.IsNullOrWhiteSpace(p.Label))
+                throw new InvalidOperationException("اسم رقم الهاتف مطلوب.");
+
+            if (string.IsNullOrWhiteSpace(p.PhoneNumber))
+                throw new InvalidOperationException("رقم الهاتف مطلوب.");
+        }
+    }
+
     private static MaintenanceCenterDto ToDto(MaintenanceCenter center) =>
-        new(center.Id, center.Name, center.Notes);
+        new(
+            center.Id,
+            center.Name,
+            center.Notes,
+            (center.Phones ?? new List<MaintenanceCenterPhone>())
+                .OrderBy(p => p.DisplayOrder)
+                .Select(p => new MaintenanceCenterPhoneDto(p.Id, p.Label, p.PhoneNumber))
+                .ToList());
 }

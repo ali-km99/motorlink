@@ -71,6 +71,8 @@ public class CreateMaintenanceCenterValidator : AbstractValidator<CreateMaintena
             .MaximumLength(200);
 
         RuleFor(x => x.Notes).MaximumLength(500);
+
+        RuleForEach(x => x.Phones).SetValidator(new CreateMaintenanceCenterPhoneValidator());
     }
 }
 
@@ -83,5 +85,22 @@ public class UpdateMaintenanceCenterValidator : AbstractValidator<UpdateMaintena
             .MaximumLength(200);
 
         RuleFor(x => x.Notes).MaximumLength(500);
+
+        RuleForEach(x => x.Phones).SetValidator(new CreateMaintenanceCenterPhoneValidator());
+    }
+}
+
+public class CreateMaintenanceCenterPhoneValidator : AbstractValidator<CreateMaintenanceCenterPhoneDto>
+{
+    public CreateMaintenanceCenterPhoneValidator()
+    {
+        RuleFor(x => x.Label)
+            .NotEmpty().WithMessage("Phone label is required.")
+            .MaximumLength(50);
+
+        RuleFor(x => x.PhoneNumber)
+            .NotEmpty().WithMessage("Phone number is required.")
+            .MaximumLength(50)
+            .Matches(@"^[\d\s\+\-\(\)]+$").WithMessage("Phone number format is invalid.");
     }
 }

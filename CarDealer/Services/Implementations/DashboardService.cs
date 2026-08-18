@@ -1,5 +1,6 @@
 ﻿using CarDealer.API.Data;
 using CarDealer.API.DTOs;
+using CarDealer.API.Repositories.Interfaces;
 using CarDealer.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +9,12 @@ namespace CarDealer.API.Services.Implementations
     public class DashboardService : IDashboardService
     {
         private readonly AppDbContext _context;
+        private readonly IMaintenanceRepository _maintenanceRepo;
 
-        public DashboardService(AppDbContext context)
+        public DashboardService(AppDbContext context, IMaintenanceRepository maintenanceRepo)
         {
             _context = context;
+            _maintenanceRepo = maintenanceRepo;
         }
 
         public async Task<DashboardStatsDto> GetStatsAsync()
@@ -124,6 +127,39 @@ namespace CarDealer.API.Services.Implementations
                 })
                 .ToList();
 
+            // ─── Maintenance Debts (إجمالي الديون + أكبر 5 ديون) ─────────
+            // نجيب كل عمليات الصيانة مع الدفعات ونحسب الدين ديناميكياً
+            // (نفس منطق MaintenanceMapping.ToDebtItem المستخدم بتقرير الديون)
+            var allMaintenances = await _maintenanceRepo.GetForDebtReportAsync(
+                centerId: null, carId: null, status: null, dateFrom: null, dateTo: null);
+
+            var maintenanceDebtItems = allMaintenances
+                .Select(m =>
+                {
+                    var paid = m.Payments?.Sum(p => p.Amount) ?? 0;
+                    var remaining = m.RepairCost - paid;
+                    return new
+                    {
+                        m.Id,
+                        CarLabel = m.Car is null ? "سيارة محذوفة" : $"{m.Car.Brand} {m.Car.Model} {m.Car.Year}",
+                        CenterName = m.MaintenanceCenter?.Name ?? string.Empty,
+                        m.RepairCost,
+                        Remaining = remaining,
+                        m.CreatedAt
+                    };
+                })
+                .ToList();
+
+            var totalMaintenanceDebt = maintenanceDebtItems.Sum(m => m.Remaining);
+
+            var topMaintenanceDebts = maintenanceDebtItems
+                .Where(m => m.Remaining > 0)
+                .OrderByDescending(m => m.Remaining)
+                .Take(5)
+                .Select(m => new TopMaintenanceDebtDto(
+                    m.Id, m.CarLabel, m.CenterName, m.RepairCost, m.Remaining, m.CreatedAt))
+                .ToList();
+
             // ─── Final Response ─────────────────────────────────────────
             return new DashboardStatsDto(
                 totalCars,
@@ -135,7 +171,9 @@ namespace CarDealer.API.Services.Implementations
                 totalProfit,
                 totalMaintenanceCost,
                 monthlySales,
-                recentSales
+                recentSales,
+                totalMaintenanceDebt,
+                topMaintenanceDebts
             );
         }
     }

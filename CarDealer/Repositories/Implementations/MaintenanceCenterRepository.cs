@@ -12,8 +12,14 @@ public class MaintenanceCenterRepository : Repository<MaintenanceCenter>, IMaint
     public override async Task<List<MaintenanceCenter>> GetAllAsync() =>
         await _context.MaintenanceCenters
             .AsNoTracking()
+            .Include(c => c.Phones)
             .OrderBy(c => c.Name)
             .ToListAsync();
+
+    public async Task<MaintenanceCenter?> GetByIdWithPhonesAsync(int id) =>
+        await _context.MaintenanceCenters
+            .Include(c => c.Phones)
+            .FirstOrDefaultAsync(c => c.Id == id);
 
     public async Task<bool> ExistsByNameAsync(string name, int? excludeId = null)
     {

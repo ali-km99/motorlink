@@ -36,17 +36,35 @@
     public record MaintenanceCenterDto(
         int Id,
         string Name,
-        string? Notes
+        string? Notes,
+        List<MaintenanceCenterPhoneDto> Phones
     );
 
     public record CreateMaintenanceCenterDto(
         string Name,
-        string? Notes
+        string? Notes,
+        List<CreateMaintenanceCenterPhoneDto>? Phones
     );
 
     public record UpdateMaintenanceCenterDto(
         string Name,
-        string? Notes
+        string? Notes,
+        List<CreateMaintenanceCenterPhoneDto>? Phones
+    );
+
+    // ─── Maintenance Center Phone DTOs ─────────────────────────────────────────────
+    // Phones تُدار عبر الـ Create/Update الخاصين بالمركز نفسه (Replace-All عند التعديل)
+    // — نفس نمط ShareContact المستخدم مع PublicShare، بدون Endpoints منفصلة.
+
+    public record MaintenanceCenterPhoneDto(
+        int Id,
+        string Label,
+        string PhoneNumber
+    );
+
+    public record CreateMaintenanceCenterPhoneDto(
+        string Label,
+        string PhoneNumber
     );
 
     // ─── Maintenance Payment DTOs ──────────────────────────────────────────────────

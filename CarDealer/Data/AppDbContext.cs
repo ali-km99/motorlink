@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<CarFeature> CarFeatures => Set<CarFeature>();
     public DbSet<Maintenance> Maintenances => Set<Maintenance>();
     public DbSet<MaintenanceCenter> MaintenanceCenters => Set<MaintenanceCenter>();
+    public DbSet<MaintenanceCenterPhone> MaintenanceCenterPhones => Set<MaintenanceCenterPhone>();
     public DbSet<MaintenancePayment> MaintenancePayments => Set<MaintenancePayment>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Sale> Sales => Set<Sale>();
@@ -118,6 +119,21 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.Name).IsUnique();
         });
 
+        // ─── MaintenanceCenterPhone ──────────────────────────────────────────
+        modelBuilder.Entity<MaintenanceCenterPhone>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Label).HasMaxLength(50).IsRequired();
+            e.Property(x => x.PhoneNumber).HasMaxLength(50).IsRequired();
+
+            e.HasOne(x => x.MaintenanceCenter)
+             .WithMany(c => c.Phones)
+             .HasForeignKey(x => x.MaintenanceCenterId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(x => x.MaintenanceCenterId);
+        });
+
         // ─── Maintenance ───────────────────────────────────────────────────
         modelBuilder.Entity<Maintenance>(e =>
         {
@@ -199,7 +215,7 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.Type);
             e.HasIndex(x => x.Date);
             e.HasQueryFilter(x => !x.IsDeleted);
-        }); 
+        });
         // ─── AppUser ───────────────────────────────────────────────────────
         modelBuilder.Entity<AppUser>(e =>
         {
