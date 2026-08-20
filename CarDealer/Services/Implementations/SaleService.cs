@@ -76,25 +76,22 @@ namespace CarDealer.API.Services.Implementations
             //  إجمالي التكلفة (مع معالجة null)
             var totalCost = car.CostPrice + car.ShippingCost + repairCost;
 
-            //  الربح أو الخسارة
+            //  الربح أو الخسارة (لأغراض العرض/الـ DTO فقط — مش لتحديد نوع الـ Transaction)
             var profit = dto.SoldPrice - totalCost;
 
-            //  تحديد نوع العملية
-            var transactionType = profit >= 0 ? "Income" : "Expense";
-
-            //  نخزن القيمة بدون سالب
-            var transactionAmount = Math.Abs(profit);
-
-            //  تسجيل العملية
+            //  تسجيل العملية: سعر البيع الكامل كـ Income
+            //  (التكلفة أصلاً مسجّلة كـ Expense منفصلة عند شراء السيارة وعند دفعات الصيانة،
+            // netProfit = Income - Expense يطلع صحيح،
+            
             _context.Transactions.Add(new Transaction
             {
-                Type = transactionType,
-                Amount = transactionAmount,
+                Type = "Income",
+                Amount = dto.SoldPrice,
                 RelatedEntity = "Sale",
                 RelatedId = sale.Id,
                 Description = profit >= 0
-                    ? $"الربح من بيع سيارة : {car.Brand} {car.Model} {car.Year}"
-                    : $"خسارة من بيع سيارة : {car.Brand} {car.Model} {car.Year}",
+                    ? $"بيع سيارة: {car.Brand} {car.Model} {car.Year} (ربح: {profit:N0})"
+                    : $"بيع سيارة: {car.Brand} {car.Model} {car.Year} (خسارة: {Math.Abs(profit):N0})",
                 Date = DateTime.UtcNow
             });
 
