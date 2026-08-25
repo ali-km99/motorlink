@@ -145,9 +145,9 @@ public static class ServiceExtensions
         {
             options.SwaggerDoc("v1", new()
             {
-                Title = "Car Dealer API",
+                Title = "Motor Link API",
                 Version = "v1",
-                Description = "API for Car Dealer Management System"
+                Description = "API for Motor Link Management System"
             });
 
             // إضافة زر Authorize في Swagger UI
