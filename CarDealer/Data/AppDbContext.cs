@@ -9,9 +9,11 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+    public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Car> Cars => Set<Car>();
     public DbSet<CarStatus> CarStatuses => Set<CarStatus>();
     public DbSet<CarImage> CarImages => Set<CarImage>();
+    public DbSet<CarComment> CarComments => Set<CarComment>();
     public DbSet<Feature> Features => Set<Feature>();
     public DbSet<CarFeature> CarFeatures => Set<CarFeature>();
     public DbSet<Maintenance> Maintenances => Set<Maintenance>();
@@ -33,6 +35,26 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // ─── Tenant ────────────────────────────────────────────────────────
+        modelBuilder.Entity<Tenant>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Slug).HasMaxLength(100).IsRequired();
+            e.HasIndex(x => x.Slug).IsUnique();
+            e.HasIndex(x => x.IsActive);
+
+            // Seed the default tenant that will own all existing data after migration.
+            e.HasData(new Tenant
+            {
+                Id = 1,
+                Name = "Default Dealer",
+                Slug = "default",
+                IsActive = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            });
+        });
+
         // ─── Car ───────────────────────────────────────────────────────────
         modelBuilder.Entity<Car>(e =>
         {
@@ -44,6 +66,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.CostPrice).HasColumnType("decimal(18,2)");
             e.Property(x => x.ShippingCost).HasColumnType("decimal(18,2)");
             e.Property(x => x.SellingPrice).HasColumnType("decimal(18,2)");
+            e.Property(x => x.DiscountedPrice).HasColumnType("decimal(18,2)");
             e.Property(x => x.VinNumber).HasMaxLength(17);
             e.Property(x => x.MileageUnit).HasMaxLength(5);
             e.Property(x => x.BodyType).HasMaxLength(50);
@@ -65,6 +88,7 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.IsDeleted);
             e.HasIndex(x => x.Brand);
             e.HasIndex(x => x.Year);
+            e.HasIndex(x => x.TenantId);
             e.HasIndex(x => x.VinNumber).IsUnique().HasFilter("[VinNumber] IS NOT NULL");
         });
 
@@ -80,6 +104,30 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Cascade)
              .IsRequired(false);
             e.HasIndex(x => x.CarId);
+        });
+
+
+        // ─── CarComment (Phase 1: new table) ──────────────────────────────
+        modelBuilder.Entity<CarComment>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Body).HasMaxLength(2000).IsRequired();
+
+            e.HasOne(x => x.Car)
+             .WithMany(x => x.Comments)
+             .HasForeignKey(x => x.CarId)
+             .OnDelete(DeleteBehavior.Cascade)
+             .IsRequired(false);
+
+            e.HasOne(x => x.AuthorUser)
+             .WithMany(u => u.Comments)
+             .HasForeignKey(x => x.AuthorUserId)
+             .OnDelete(DeleteBehavior.SetNull)
+             .IsRequired(false);
+
+            e.HasQueryFilter(x => !x.IsDeleted);
+            e.HasIndex(x => x.CarId);
+            e.HasIndex(x => x.TenantId);
         });
 
 
@@ -116,6 +164,7 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200).IsRequired();
             e.Property(x => x.Notes).HasMaxLength(500);
+            e.HasIndex(x => x.TenantId);
             e.HasIndex(x => x.Name).IsUnique();
         });
 
@@ -180,6 +229,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.Name).HasMaxLength(150).IsRequired();
             e.Property(x => x.Phone).HasMaxLength(50).IsRequired();
             e.HasQueryFilter(x => !x.IsDeleted);
+            e.HasIndex(x => x.TenantId);
 
         });
 
@@ -213,6 +263,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.RelatedEntity).HasMaxLength(50);
 
             e.HasIndex(x => x.Type);
+            e.HasIndex(x => x.TenantId);
             e.HasIndex(x => x.Date);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
@@ -226,6 +277,8 @@ public class AppDbContext : DbContext
             e.Property(x => x.Role).HasMaxLength(50).IsRequired();
             e.Property(x => x.RefreshToken).HasMaxLength(500);
             e.HasIndex(x => x.Email).IsUnique();
+            e.HasIndex(x => x.TenantId);
+            e.HasIndex(x => x.IsPlatformAdmin);
             e.HasIndex(x => x.Username).IsUnique();
         });
 
@@ -292,6 +345,7 @@ public class AppDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.HasIndex(x => x.TenantId);
             e.HasIndex(x => x.Name).IsUnique();
         });
 
@@ -309,6 +363,7 @@ public class AppDbContext : DbContext
 
             e.HasQueryFilter(x => !x.IsDeleted);
             e.HasIndex(x => x.CategoryId);
+            e.HasIndex(x => x.TenantId);
             e.HasIndex(x => x.Date);
         });
 

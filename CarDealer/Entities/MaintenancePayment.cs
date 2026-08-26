@@ -9,6 +9,10 @@ namespace CarDealer.API.Entities
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // ─── Multi-Tenant (Phase 1: schema only) ─────────────────────────────────
+        public int? TenantId { get; set; }
+        public Tenant? Tenant { get; set; } = null!;
+
         public Maintenance Maintenance { get; set; } = null!;
     }
 }

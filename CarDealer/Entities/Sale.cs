@@ -9,6 +9,14 @@
         public DateTime SoldDate { get; set; } = DateTime.UtcNow;
         public string? Notes { get; set; }
 
+        // ─── Multi-Tenant (Phase 1: schema only) ─────────────────────────────────
+        public int? TenantId { get; set; }
+        public Tenant? Tenant { get; set; } = null!;
+
+        // ─── Discounted Listing support: snapshot of which price was charged ─────
+        // Values: "Original" | "Discounted" — captured at sale-creation time
+        public string? PriceSource { get; set; }
+
         public Car Car { get; set; } = null!;
         public Customer Customer { get; set; } = null!;
     }

@@ -13,6 +13,10 @@ public class PublicShare
 
     public string? ContactAddress { get; set; }
 
+    // ─── Multi-Tenant (Phase 1: schema only) ─────────────────────────────────
+    public int? TenantId { get; set; }
+    public Tenant? Tenant { get; set; } = null!;
+
     public ICollection<ShareView> Views { get; set; } = new List<ShareView>();
     public ICollection<ShareContact> Contacts { get; set; } = new List<ShareContact>();
 }

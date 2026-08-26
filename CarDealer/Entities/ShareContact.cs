@@ -9,4 +9,8 @@ public class ShareContact
     public string Label { get; set; } = default!;   // "هاتف", "واتساب", "فرع طرابلس"...
     public string Value { get; set; } = default!;    // الرقم نفسه
     public int DisplayOrder { get; set; } = 0;        // ترتيب العرض بالواجهة
+
+    // ─── Multi-Tenant (Phase 1: schema only) ─────────────────────────────────
+    public int? TenantId { get; set; }
+    public Tenant? Tenant { get; set; } = null!;
 }

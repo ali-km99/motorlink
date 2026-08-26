@@ -10,5 +10,9 @@
         public string? Description { get; set; }
         public DateTime Date { get; set; } = DateTime.UtcNow;
         public bool IsDeleted { get; set; } = false;
+
+        // ─── Multi-Tenant (Phase 1: schema only) ─────────────────────────────────
+        public int? TenantId { get; set; }
+        public Tenant? Tenant { get; set; } = null!;
     }
 }

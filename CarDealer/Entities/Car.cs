@@ -43,11 +43,26 @@
         public string? Notes { get; set; }
         public bool IsDeleted { get; set; } = false;
 
+        // ─── Multi-Tenant (Phase 1: schema only) ─────────────────────────────────
+        public int? TenantId { get; set; }
+        public Tenant? Tenant { get; set; } = null!;
+
+        // ─── Contact-for-Price (Phase 1: schema only) ────────────────────────────
+        public bool HidePrice { get; set; } = false;            // true = السعر مخفي عن الزبائن
+        public bool ShowContactCta { get; set; } = false;       // true = اعرض "اتصل لمعرفة السعر"
+
+        // ─── Discounted Listing (Phase 1: schema only) ───────────────────────────
+        public decimal? DiscountedPrice { get; set; }
+        public DateTime? DiscountStartAt { get; set; }
+        public DateTime? DiscountEndAt { get; set; }
+        public bool IsDiscountActive { get; set; } = false;
+
         // ─── Navigation Properties ─────────────────────────────────────────────────
         public CarStatus Status { get; set; } = null!;
         public ICollection<CarImage> Images { get; set; } = new List<CarImage>();
         public ICollection<CarFeature> CarFeatures { get; set; } = new List<CarFeature>();
         public ICollection<Maintenance> Maintenances { get; set; } = new List<Maintenance>();
+        public ICollection<CarComment> Comments { get; set; } = new List<CarComment>();
         public Sale? Sale { get; set; }
     }
 

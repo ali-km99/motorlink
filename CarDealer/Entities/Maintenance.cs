@@ -10,6 +10,10 @@
         public decimal RepairCost { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // ─── Multi-Tenant (Phase 1: schema only) ─────────────────────────────────
+        public int? TenantId { get; set; }
+        public Tenant? Tenant { get; set; } = null!;
+
         public Car Car { get; set; } = null!;
         public MaintenanceCenter MaintenanceCenter { get; set; } = null!;
         public ICollection<MaintenancePayment> Payments { get; set; } = new List<MaintenancePayment>();

@@ -8,4 +8,8 @@ public class ShareView
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
     public DateTime ViewedAt { get; set; }
+
+    // ─── Multi-Tenant (Phase 1: schema only) ─────────────────────────────────
+    public int? TenantId { get; set; }
+    public Tenant? Tenant { get; set; } = null!;
 }
