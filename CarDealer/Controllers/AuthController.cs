@@ -75,6 +75,30 @@ public class AuthController : ControllerBase
         }
     }
 
+    // POST /api/auth/register-dealership
+    [HttpPost("register-dealership")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<DealershipRegistrationResponseDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RegisterDealership([FromBody] RegisterDealershipDto dto)
+    {
+        try
+        {
+            var result = await _authService.RegisterDealershipAsync(dto);
+            return StatusCode(StatusCodes.Status201Created,
+                ApiResponse<DealershipRegistrationResponseDto>.Ok(result, "Dealership registered successfully."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
     // POST /api/auth/logout
     [HttpPost("logout")]
     [Authorize]

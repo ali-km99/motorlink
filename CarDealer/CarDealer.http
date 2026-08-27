@@ -1,6 +1,53 @@
 @CarDealer_HostAddress = http://localhost:5046
 
-GET {{CarDealer_HostAddress}}/weatherforecast/
+### ─── Phase 2 Multi-Tenant Testing ───────────────────────────────────────
+
+### Register Dealership 1 (Tenant A)
+POST {{CarDealer_HostAddress}}/api/auth/register-dealership
+Content-Type: application/json
+
+{
+  "dealershipName": "Al-Khaleej Motors",
+  "dealershipSlug": "khalij-motors",
+  "ownerUsername": "ali_owner",
+  "ownerEmail": "ali@khalij.com",
+  "ownerPassword": "SecurePass123!"
+}
+
+### Register Dealership 2 (Tenant B)
+POST {{CarDealer_HostAddress}}/api/auth/register-dealership
+Content-Type: application/json
+
+{
+  "dealershipName": "Desert Autos",
+  "dealershipSlug": "desert-autos",
+  "ownerUsername": "fatima_owner",
+  "ownerEmail": "fatima@desert.com",
+  "ownerPassword": "SecurePass456!"
+}
+
+### Login Dealership 1 Owner
+POST {{CarDealer_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ali@khalij.com",
+  "password": "SecurePass123!"
+}
+
+### Login Dealership 2 Owner
+POST {{CarDealer_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "fatima@desert.com",
+  "password": "SecurePass456!"
+}
+
+### Get Current User (Default Tenant)
+GET {{CarDealer_HostAddress}}/api/auth/me
 Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ###
+

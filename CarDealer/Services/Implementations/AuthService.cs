@@ -118,11 +118,115 @@ public class AuthService : IAuthService
         return true;
     }
 
+    // ─── Register Dealership (New Tenant + Owner User) ──────────────────────
+    public async Task<DealershipRegistrationResponseDto> RegisterDealershipAsync(RegisterDealershipDto dto)
+    {
+        // Validate inputs
+        if (string.IsNullOrWhiteSpace(dto.DealershipName))
+            throw new ArgumentException("Dealership name is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.DealershipSlug))
+            throw new ArgumentException("Dealership slug is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.OwnerUsername))
+            throw new ArgumentException("Owner username is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.OwnerEmail))
+            throw new ArgumentException("Owner email is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.OwnerPassword))
+            throw new ArgumentException("Owner password is required.");
+
+        ValidatePasswordStrength(dto.OwnerPassword);
+
+        // Check for duplicate slug and email
+        var slugExists = await _context.Tenants
+            .AnyAsync(t => t.Slug.ToLower() == dto.DealershipSlug.ToLower());
+
+        if (slugExists)
+            throw new InvalidOperationException("A dealership with this slug already exists.");
+
+        var emailExists = await _context.Users
+            .AnyAsync(u => u.Email == dto.OwnerEmail.ToLower());
+
+        if (emailExists)
+            throw new InvalidOperationException("Email already registered.");
+
+        var usernameExists = await _context.Users
+            .AnyAsync(u => u.Username == dto.OwnerUsername);
+
+        if (usernameExists)
+            throw new InvalidOperationException("Username already taken.");
+
+        // Create new tenant
+        var tenant = new Tenant
+        {
+            Name      = dto.DealershipName.Trim(),
+            Slug      = dto.DealershipSlug.Trim().ToLower(),
+            IsActive  = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Tenants.Add(tenant);
+        await _context.SaveChangesAsync(); // Save tenant first to get TenantId
+
+        // Create owner user
+        var ownerUser = new AppUser
+        {
+            Username     = dto.OwnerUsername.Trim(),
+            Email        = dto.OwnerEmail.Trim().ToLower(),
+            PasswordHash = HashPassword(dto.OwnerPassword),
+            Role         = "Owner",  // Dealership owner role
+            TenantId     = tenant.Id,
+            IsPlatformAdmin = false,
+            CreatedAt    = DateTime.UtcNow,
+            IsActive     = true
+        };
+
+        _context.Users.Add(ownerUser);
+        await _context.SaveChangesAsync();
+
+        // Build response
+        var accessToken  = _jwt.GenerateAccessToken(
+            ownerUser.Id,
+            ownerUser.Email,
+            ownerUser.Role,
+            ownerUser.TenantId,
+            ownerUser.IsPlatformAdmin);
+
+        var refreshToken = _jwt.GenerateRefreshToken();
+        var expiry       = DateTime.UtcNow.AddMinutes(
+            int.Parse(_config["Jwt:AccessTokenMinutes"] ?? "60"));
+
+        // Store refresh token
+        ownerUser.RefreshToken       = refreshToken;
+        ownerUser.RefreshTokenExpiry = DateTime.UtcNow.AddDays(_refreshTokenDays);
+        await _context.SaveChangesAsync();
+
+        return new DealershipRegistrationResponseDto(
+            tenant.Id,
+            tenant.Name,
+            tenant.Slug,
+            ownerUser.Id,
+            ownerUser.Username,
+            ownerUser.Email,
+            accessToken,
+            refreshToken,
+            expiry
+        );
+    }
+
     // ─── Private Helpers ──────────────────────────────────────────────────────
 
     private async Task<AuthResponseDto> BuildAuthResponse(AppUser user)
     {
-        var accessToken  = _jwt.GenerateAccessToken(user.Id, user.Email, user.Role);
+        var accessToken  = _jwt.GenerateAccessToken(
+            user.Id,
+            user.Email,
+            user.Role,
+            user.TenantId,
+            user.IsPlatformAdmin);
+
         var refreshToken = _jwt.GenerateRefreshToken();
         var expiry       = DateTime.UtcNow.AddMinutes(
             int.Parse(_config["Jwt:AccessTokenMinutes"] ?? "60"));

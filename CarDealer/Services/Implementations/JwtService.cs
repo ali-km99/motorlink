@@ -25,7 +25,7 @@ public class JwtService : IJwtService
     }
 
     // ─── Generate Access Token (JWT) ──────────────────────────────────────────
-    public string GenerateAccessToken(int userId, string email, string role)
+    public string GenerateAccessToken(int userId, string email, string role, int? tenantId = null, bool isPlatformAdmin = false)
     {
         var key     = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
         var creds   = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -39,7 +39,9 @@ public class JwtService : IJwtService
             new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Iat,
                 new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(),
-                ClaimValueTypes.Integer64)
+                ClaimValueTypes.Integer64),
+            new Claim("tenant_id", tenantId?.ToString() ?? string.Empty),
+            new Claim("is_platform_admin", isPlatformAdmin.ToString())
         };
 
         var token = new JwtSecurityToken(

@@ -9,11 +9,12 @@ public interface IAuthService
     Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenDto dto);
     Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto dto);
     Task<bool> RevokeTokenAsync(int userId);
+    Task<DealershipRegistrationResponseDto> RegisterDealershipAsync(RegisterDealershipDto dto);
 }
 
 public interface IJwtService
 {
-    string GenerateAccessToken(int userId, string email, string role);
+    string GenerateAccessToken(int userId, string email, string role, int? tenantId = null, bool isPlatformAdmin = false);
     string GenerateRefreshToken();
     int? ValidateAccessToken(string token);
 }

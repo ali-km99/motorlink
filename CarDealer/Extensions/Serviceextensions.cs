@@ -66,6 +66,11 @@ public static class ServiceExtensions
         services.AddScoped<IPublicShareService, PublicShareService>();
         services.AddScoped<IExpenseService, ExpenseService>();
         services.AddScoped<IExpenseCategoryService, ExpenseCategoryService>();
+        
+        // Multi-tenant services
+        services.AddScoped<ICurrentTenantService, CurrentTenantService>();
+        services.AddHttpContextAccessor();
+        
         return services;
     }
 
