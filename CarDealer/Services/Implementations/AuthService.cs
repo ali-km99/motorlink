@@ -3,9 +3,7 @@ using CarDealer.API.DTOs.Auth;
 using CarDealer.API.Entities;
 using CarDealer.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
-
+using CarDealer.API.Common;
 namespace CarDealer.API.Services;
 
 public class AuthService : IAuthService
@@ -36,7 +34,7 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             throw new UnauthorizedAccessException("Your account is disabled.");
 
-        if (!VerifyPassword(dto.Password, user.PasswordHash))
+        if (!PasswordHasher.Verify(dto.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid email or password.");
 
         return await BuildAuthResponse(user);
@@ -52,17 +50,18 @@ public class AuthService : IAuthService
         if (exists)
             throw new InvalidOperationException("Email or username already exists.");
 
-        // التحقق من قوة كلمة المرور
-        ValidatePasswordStrength(dto.Password);
+        PasswordHasher.ValidateStrength(dto.Password);
 
         var user = new AppUser
         {
-            Username     = dto.Username.Trim(),
-            Email        = dto.Email.Trim().ToLower(),
-            PasswordHash = HashPassword(dto.Password),
-            Role         = dto.Role,
-            CreatedAt    = DateTime.UtcNow,
-            IsActive     = true
+            Username = dto.Username.Trim(),
+            Email = dto.Email.Trim().ToLower(),
+            PasswordHash = PasswordHasher.Hash(dto.Password),
+            Role = Roles.Viewer,
+            TenantId = null,
+            IsPlatformAdmin = false,
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
         };
 
         _context.Users.Add(user);
@@ -92,12 +91,12 @@ public class AuthService : IAuthService
         var user = await _context.Users.FindAsync(userId);
         if (user is null) return false;
 
-        if (!VerifyPassword(dto.CurrentPassword, user.PasswordHash))
+        if (!PasswordHasher.Verify(dto.CurrentPassword, user.PasswordHash))
             throw new UnauthorizedAccessException("Current password is incorrect.");
 
-        ValidatePasswordStrength(dto.NewPassword);
+        PasswordHasher.ValidateStrength(dto.NewPassword);
 
-        user.PasswordHash    = HashPassword(dto.NewPassword);
+        user.PasswordHash = PasswordHasher.Hash(dto.NewPassword);
         user.RefreshToken    = null;    // نلغي كل الـ sessions الحالية
         user.RefreshTokenExpiry = null;
 
@@ -137,7 +136,7 @@ public class AuthService : IAuthService
         if (string.IsNullOrWhiteSpace(dto.OwnerPassword))
             throw new ArgumentException("Owner password is required.");
 
-        ValidatePasswordStrength(dto.OwnerPassword);
+        PasswordHasher.ValidateStrength(dto.OwnerPassword);
 
         // Check for duplicate slug and email
         var slugExists = await _context.Tenants
@@ -175,8 +174,8 @@ public class AuthService : IAuthService
         {
             Username     = dto.OwnerUsername.Trim(),
             Email        = dto.OwnerEmail.Trim().ToLower(),
-            PasswordHash = HashPassword(dto.OwnerPassword),
-            Role         = "Owner",  // Dealership owner role
+            PasswordHash = PasswordHasher.Hash(dto.OwnerPassword),
+            Role = Roles.Owner,
             TenantId     = tenant.Id,
             IsPlatformAdmin = false,
             CreatedAt    = DateTime.UtcNow,
@@ -249,63 +248,5 @@ public class AuthService : IAuthService
         );
     }
 
-    // ─── Password Hashing (PBKDF2 + Salt) ────────────────────────────────────
-    // أقوى من BCrypt للـ .NET native ولا يحتاج package إضافي
-    private static string HashPassword(string password)
-    {
-        var salt = new byte[16];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(salt);
 
-        var hash = Rfc2898DeriveBytes.Pbkdf2(
-            Encoding.UTF8.GetBytes(password),
-            salt,
-            iterations: 100_000,
-            HashAlgorithmName.SHA256,
-            outputLength: 32);
-
-        // نخزن: salt + hash معاً بصيغة Base64
-        var combined = new byte[salt.Length + hash.Length];
-        Buffer.BlockCopy(salt, 0, combined, 0,             salt.Length);
-        Buffer.BlockCopy(hash, 0, combined, salt.Length, hash.Length);
-
-        return Convert.ToBase64String(combined);
-    }
-
-    private static bool VerifyPassword(string password, string storedHash)
-    {
-        try
-        {
-            var combined = Convert.FromBase64String(storedHash);
-            var salt = combined[..16];
-            var stored = combined[16..];
-
-            var hash = Rfc2898DeriveBytes.Pbkdf2(
-                Encoding.UTF8.GetBytes(password),
-                salt,
-                iterations: 100_000,
-                HashAlgorithmName.SHA256,
-                outputLength: 32);
-
-            // Constant-time comparison لمنع Timing Attacks
-            return CryptographicOperations.FixedTimeEquals(hash, stored);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static void ValidatePasswordStrength(string password)
-    {
-        if (password.Length < 8)
-            throw new InvalidOperationException("Password must be at least 8 characters.");
-
-        if (!password.Any(char.IsUpper))
-            throw new InvalidOperationException("Password must contain at least one uppercase letter.");
-
-        if (!password.Any(char.IsDigit))
-            throw new InvalidOperationException("Password must contain at least one digit.");
-
-    }
 }

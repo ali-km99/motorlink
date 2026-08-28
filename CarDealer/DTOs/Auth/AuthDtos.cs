@@ -8,8 +8,8 @@ public record LoginDto(
 public record RegisterDto(
     string Username,
     string Email,
-    string Password,
-    string Role = "Admin"
+    string Password
+    
 );
 
 public record AuthResponseDto(

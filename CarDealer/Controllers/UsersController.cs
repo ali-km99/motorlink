@@ -1,4 +1,5 @@
-﻿using CarDealer.API.DTOs;
+﻿using CarDealer.API.Common;
+using CarDealer.API.DTOs;
 using CarDealer.API.DTOs.Permission;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ namespace CarDealer.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "SuperAdmin")]  // الكونترولر كامل مخصص للسوبر أدمن فقط
+    [Authorize(Roles = Roles.Owner)]
     public class UsersController : ControllerBase
     {
         private readonly IPermissionService _permissionService;

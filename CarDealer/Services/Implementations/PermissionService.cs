@@ -2,11 +2,18 @@
 using CarDealer.API.DTOs.Permission;
 using CarDealer.API.Entities;
 using Microsoft.EntityFrameworkCore;
-
+using CarDealer.API.Common;
+using CarDealer.API.Services;
 public class PermissionService : IPermissionService
 {
     private readonly AppDbContext _context;
-    public PermissionService(AppDbContext context) => _context = context;
+    private readonly ICurrentTenantService _currentTenant;
+
+    public PermissionService(AppDbContext context, ICurrentTenantService currentTenant)
+    {
+        _context = context;
+        _currentTenant = currentTenant;
+    }
 
     public async Task<List<PermissionDto>> GetAllPermissionsAsync() =>
         await _context.Permissions
@@ -19,12 +26,16 @@ public class PermissionService : IPermissionService
         if (await _context.Users.AnyAsync(u => u.Username == dto.Username || u.Email == dto.Email))
             throw new InvalidOperationException("اسم المستخدم أو البريد الإلكتروني مستخدم مسبقًا");
 
+        PasswordHasher.ValidateStrength(dto.Password);
+
         var user = new AppUser
         {
             Username = dto.Username,
             Email = dto.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password), // حسب مكتبة الهاش المستخدمة عندكم فعليًا
-            Role = "User" // السوبر أدمن يُنشأ يدويًا فقط بقاعدة البيانات، مو عبر هذا الـ endpoint
+            PasswordHash = PasswordHasher.Hash(dto.Password),
+            Role = Roles.Staff,
+            TenantId = _currentTenant.TenantId,
+            IsPlatformAdmin = false
         };
 
         _context.Users.Add(user);
@@ -33,7 +44,7 @@ public class PermissionService : IPermissionService
         if (dto.PermissionIds?.Any() == true)
         {
             var permissions = dto.PermissionIds.Distinct()
-                .Select(pid => new UserPermission { UserId = user.Id, PermissionId = pid });
+                .Select(pid => new UserPermission { UserId = user.Id, PermissionId = pid, TenantId = user.TenantId });
             await _context.UserPermissions.AddRangeAsync(permissions);
             await _context.SaveChangesAsync();
         }
@@ -46,7 +57,7 @@ public class PermissionService : IPermissionService
         var user = await _context.Users.FindAsync(userId);
         if (user is null) return null;
 
-        if (user.Role == "SuperAdmin" && dto.Role != "SuperAdmin")
+        if (user.Role == Roles.SuperAdmin && dto.Role != Roles.SuperAdmin)
             throw new InvalidOperationException("لا يمكن تغيير رتبة حساب السوبر أدمن");
 
         var username = dto.Username.Trim();
@@ -73,7 +84,7 @@ public class PermissionService : IPermissionService
         var user = await _context.Users.FindAsync(userId);
         if (user is null) return null;
 
-        if (user.Role == "SuperAdmin")
+        if (user.Role == Roles.SuperAdmin)
             throw new InvalidOperationException("لا يمكن تعديل صلاحيات حساب السوبر أدمن");
 
         var strategy = _context.Database.CreateExecutionStrategy();
@@ -89,7 +100,7 @@ public class PermissionService : IPermissionService
             if (permissionIds?.Any() == true)
             {
                 var newPermissions = permissionIds.Distinct()
-                    .Select(pid => new UserPermission { UserId = userId, PermissionId = pid });
+                   .Select(pid => new UserPermission { UserId = userId, PermissionId = pid, TenantId = user.TenantId });
                 await _context.UserPermissions.AddRangeAsync(newPermissions);
                 await _context.SaveChangesAsync();
             }
@@ -129,10 +140,14 @@ public class PermissionService : IPermissionService
     }
     public async Task<List<UserWithPermissionsDto>> GetAllUsersAsync()
     {
-        var users = await _context.Users
+        var query = _context.Users
             .Include(u => u.Permissions).ThenInclude(up => up.Permission)
-            .OrderBy(u => u.Username)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (_currentTenant.TenantId.HasValue)
+            query = query.Where(u => u.TenantId == _currentTenant.TenantId.Value);
+
+        var users = await query.OrderBy(u => u.Username).ToListAsync();
 
         return users.Select(user => new UserWithPermissionsDto(
             user.Id, user.Username, user.Email, user.Role,

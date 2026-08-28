@@ -1,7 +1,7 @@
 ﻿using CarDealer.API.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-
+using CarDealer.API.Common;
 namespace CarDealer.API.Authorization;
 
 public class HasPermissionAttribute : TypeFilterAttribute
@@ -28,17 +28,14 @@ public class HasPermissionFilter : IAsyncAuthorizationFilter
             return Task.CompletedTask;
         }
 
-        // السوبر أدمن يتجاوز كل فحص صلاحيات تلقائيًا
-        var isSuperAdmin = user.IsInRole("SuperAdmin");
+        var isOwner = user.IsInRole(Roles.Owner);
         var hasPermission = user.HasClaim("permission", _permissionCode);
 
-        if (!isSuperAdmin && !hasPermission)
+        if (!isOwner && !hasPermission)
         {
             context.Result = new ObjectResult(
                 ApiResponse<object>.Fail("ليس لديك صلاحية لتنفيذ هذه العملية"))
-            {
-                StatusCode = StatusCodes.Status403Forbidden
-            };
+            { StatusCode = StatusCodes.Status403Forbidden };
         }
 
         return Task.CompletedTask;

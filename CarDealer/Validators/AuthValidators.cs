@@ -41,9 +41,7 @@ public class RegisterValidator : AbstractValidator<RegisterDto>
             .Matches(@"[0-9]").WithMessage("Password must contain at least one digit.");
             
 
-        RuleFor(x => x.Role)
-            .Must(r => r == "Admin" || r == "Viewer" || r == "SuperAdmin")
-            .WithMessage("Role must be either 'Admin' or 'Viewer' or 'SuperAdmin'.");
+       
     }
 }
 
