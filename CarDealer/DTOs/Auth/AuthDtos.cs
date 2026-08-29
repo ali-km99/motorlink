@@ -5,12 +5,7 @@ public record LoginDto(
     string Password
 );
 
-public record RegisterDto(
-    string Username,
-    string Email,
-    string Password
-    
-);
+
 
 public record AuthResponseDto(
     int Id,

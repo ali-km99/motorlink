@@ -31,6 +31,7 @@ public class AppDbContext : DbContext
     public DbSet<ShareContact> ShareContacts => Set<ShareContact>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
+    public DbSet<MarketplaceUser> MarketplaceUsers => Set<MarketplaceUser>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

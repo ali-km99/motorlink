@@ -40,35 +40,7 @@ public class AuthService : IAuthService
         return await BuildAuthResponse(user);
     }
 
-    // ─── Register ─────────────────────────────────────────────────────────────
-    public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
-    {
-        // منع التكرار
-        var exists = await _context.Users
-            .AnyAsync(u => u.Email == dto.Email || u.Username == dto.Username);
-
-        if (exists)
-            throw new InvalidOperationException("Email or username already exists.");
-
-        PasswordHasher.ValidateStrength(dto.Password);
-
-        var user = new AppUser
-        {
-            Username = dto.Username.Trim(),
-            Email = dto.Email.Trim().ToLower(),
-            PasswordHash = PasswordHasher.Hash(dto.Password),
-            Role = Roles.Viewer,
-            TenantId = null,
-            IsPlatformAdmin = false,
-            CreatedAt = DateTime.UtcNow,
-            IsActive = true
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        return await BuildAuthResponse(user);
-    }
+   
 
     // ─── Refresh Token ────────────────────────────────────────────────────────
     public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenDto dto)

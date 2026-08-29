@@ -95,4 +95,25 @@ public class JwtService : IJwtService
             return null;
         }
     }
+
+    public string GenerateMarketplaceToken(int userId, string email)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var expires = DateTime.UtcNow.AddMinutes(_accessTokenMinutes);
+
+        var claims = new[]
+        {
+        new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+        new Claim(JwtRegisteredClaimNames.Email, email),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim("user_type", "marketplace")   // ← يميّزه عن مستخدمي المعارض
+    };
+
+        var token = new JwtSecurityToken(
+            issuer: _issuer, audience: _audience, claims: claims,
+            notBefore: DateTime.UtcNow, expires: expires, signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 }

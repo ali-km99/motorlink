@@ -15,6 +15,9 @@ public class PermissionClaimsTransformation : IClaimsTransformation
     {
         if (principal.Identity?.IsAuthenticated != true)
             return principal;
+        // مستخدمو Marketplace منفصلون كلياً عن جدول Users — لا حاجة (ولا يجوز) البحث عنهم هنا
+        if (principal.HasClaim(c => c.Type == "user_type" && c.Value == "marketplace"))
+            return principal;
 
         // Extract userId from 'sub' claim (JWT standard) or fall back to NameIdentifier
         var userIdClaim = principal.FindFirst("sub")?.Value 

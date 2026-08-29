@@ -66,7 +66,7 @@ public static class ServiceExtensions
         services.AddScoped<IPublicShareService, PublicShareService>();
         services.AddScoped<IExpenseService, ExpenseService>();
         services.AddScoped<IExpenseCategoryService, ExpenseCategoryService>();
-        
+        services.AddScoped<IMarketplaceAuthService, MarketplaceAuthService>();
         // Multi-tenant services
         services.AddScoped<ICurrentTenantService, CurrentTenantService>();
         services.AddHttpContextAccessor();
