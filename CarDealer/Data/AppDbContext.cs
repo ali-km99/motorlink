@@ -1,5 +1,6 @@
 ﻿using CarDealer.API.Common;
 using CarDealer.API.Entities;
+using CarDealer.API.Services;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,13 @@ namespace CarDealer.API.Data;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    private readonly ICurrentTenantService _currentTenant;
+
+    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentTenantService currentTenant)
+        : base(options)
+    {
+        _currentTenant = currentTenant;
+    }
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Car> Cars => Set<Car>();
@@ -32,11 +39,12 @@ public class AppDbContext : DbContext
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     public DbSet<MarketplaceUser> MarketplaceUsers => Set<MarketplaceUser>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // ─── Tenant ────────────────────────────────────────────────────────
+        // ─── Tenant (عالمي — لا فلتر Tenant عليه هو نفسه) ────────────────────
         modelBuilder.Entity<Tenant>(e =>
         {
             e.HasKey(x => x.Id);
@@ -83,14 +91,16 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.StatusId)
              .OnDelete(DeleteBehavior.Restrict);
 
-            e.HasQueryFilter(x => !x.IsDeleted);
+            e.HasQueryFilter(x => !x.IsDeleted
+                && (x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin));
 
             e.HasIndex(x => x.StatusId);
             e.HasIndex(x => x.IsDeleted);
             e.HasIndex(x => x.Brand);
             e.HasIndex(x => x.Year);
             e.HasIndex(x => x.TenantId);
-            e.HasIndex(x => x.VinNumber).IsUnique().HasFilter("[VinNumber] IS NOT NULL");
+            e.HasIndex(x => new { x.TenantId, x.VinNumber })
+                .IsUnique().HasFilter("[VinNumber] IS NOT NULL");
         });
 
         // ─── CarImage ──────────────────────────────────────────────────────
@@ -104,9 +114,11 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.CarId)
              .OnDelete(DeleteBehavior.Cascade)
              .IsRequired(false);
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => x.CarId);
         });
-
 
         // ─── CarComment (Phase 1: new table) ──────────────────────────────
         modelBuilder.Entity<CarComment>(e =>
@@ -126,7 +138,9 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.SetNull)
              .IsRequired(false);
 
-            e.HasQueryFilter(x => !x.IsDeleted);
+            e.HasQueryFilter(x => !x.IsDeleted
+                && (x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin));
+
             e.HasIndex(x => x.CarId);
             e.HasIndex(x => x.TenantId);
         });
@@ -138,9 +152,8 @@ public class AppDbContext : DbContext
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
             e.Property(x => x.Category).HasMaxLength(50).IsRequired();
             e.HasIndex(x => x.Category);
+            // عالمي — لا TenantId، لا فلتر
         });
-
-
 
 
         // ─── CarFeature ────────────────────────────────────────────────────
@@ -156,6 +169,9 @@ public class AppDbContext : DbContext
              .WithMany(x => x.CarFeatures)
              .HasForeignKey(x => x.FeatureId)
              .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => new { x.CarId, x.FeatureId }).IsUnique();
         });
 
@@ -165,8 +181,11 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200).IsRequired();
             e.Property(x => x.Notes).HasMaxLength(500);
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => x.TenantId);
-            e.HasIndex(x => x.Name).IsUnique();
+            e.HasIndex(x => new { x.TenantId, x.Name }).IsUnique();
         });
 
         // ─── MaintenanceCenterPhone ──────────────────────────────────────────
@@ -180,6 +199,8 @@ public class AppDbContext : DbContext
              .WithMany(c => c.Phones)
              .HasForeignKey(x => x.MaintenanceCenterId)
              .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
 
             e.HasIndex(x => x.MaintenanceCenterId);
         });
@@ -202,6 +223,8 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.MaintenanceCenterId)
              .OnDelete(DeleteBehavior.Restrict);
 
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => x.CarId);
             e.HasIndex(x => x.MaintenanceCenterId);
             e.HasIndex(x => new { x.MaintenanceCenterId, x.CreatedAt });
@@ -219,6 +242,8 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.MaintenanceId)
              .OnDelete(DeleteBehavior.Restrict);
 
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => x.MaintenanceId);
             e.HasIndex(x => x.PaymentDate);
         });
@@ -229,9 +254,11 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(150).IsRequired();
             e.Property(x => x.Phone).HasMaxLength(50).IsRequired();
-            e.HasQueryFilter(x => !x.IsDeleted);
-            e.HasIndex(x => x.TenantId);
 
+            e.HasQueryFilter(x => !x.IsDeleted
+                && (x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin));
+
+            e.HasIndex(x => x.TenantId);
         });
 
         // ─── Sale ──────────────────────────────────────────────────────────
@@ -250,6 +277,9 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.CustomerId)
              .OnDelete(DeleteBehavior.Restrict)
             .IsRequired(false);
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => x.CarId).IsUnique();
             e.HasIndex(x => x.CustomerId);
             e.HasIndex(x => x.SoldDate);
@@ -266,8 +296,11 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.Type);
             e.HasIndex(x => x.TenantId);
             e.HasIndex(x => x.Date);
-            e.HasQueryFilter(x => !x.IsDeleted);
+
+            e.HasQueryFilter(x => !x.IsDeleted
+                && (x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin));
         });
+
         // ─── AppUser ───────────────────────────────────────────────────────
         modelBuilder.Entity<AppUser>(e =>
         {
@@ -281,9 +314,25 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.TenantId);
             e.HasIndex(x => x.IsPlatformAdmin);
             e.HasIndex(x => x.Username).IsUnique();
+
+            // ⚠️ حرج: هذا الفلتر يمنع Login/RegisterDealership من إيجاد أي مستخدم
+            // ما لم تُستخدم .IgnoreQueryFilters() صراحة بكل استعلام مجهول (قبل معرفة Tenant).
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
         });
 
-        // ─── Seed CarStatus ────────────────────────────────────────────────
+        // ─── MarketplaceUser (منفصل كلياً — لا TenantId، لا فلتر) ─────────
+        modelBuilder.Entity<MarketplaceUser>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Username).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Email).HasMaxLength(200).IsRequired();
+            e.Property(x => x.PasswordHash).IsRequired();
+            e.Property(x => x.RefreshToken).HasMaxLength(500);
+            e.HasIndex(x => x.Email).IsUnique();
+            e.HasIndex(x => x.Username).IsUnique();
+        });
+
+        // ─── Seed CarStatus (عالمي) ────────────────────────────────────────
         modelBuilder.Entity<CarStatus>().HasData(
             new CarStatus { Id = 1, Name = "Ready" },
             new CarStatus { Id = 2, Name = "Maintenance" },
@@ -299,6 +348,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.Name).HasMaxLength(150).IsRequired();
             e.Property(x => x.Category).HasMaxLength(50).IsRequired();
             e.HasIndex(x => x.Code).IsUnique();
+            // عالمي — لا TenantId، لا فلتر
         });
 
         modelBuilder.Entity<UserPermission>(e =>
@@ -308,6 +358,9 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Permission).WithMany(p => p.UserPermissions)
              .HasForeignKey(x => x.PermissionId).OnDelete(DeleteBehavior.Cascade);
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => new { x.UserId, x.PermissionId }).IsUnique();
         });
 
@@ -323,6 +376,9 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.CarId)
              .OnDelete(DeleteBehavior.Cascade)
              .IsRequired(false);
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => x.CarId);
         });
 
@@ -337,6 +393,22 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.ShareId)
              .OnDelete(DeleteBehavior.Cascade);
 
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
+            e.HasIndex(x => x.ShareId);
+        });
+
+        modelBuilder.Entity<ShareView>(e =>
+        {
+            e.HasKey(x => x.Id);
+
+            e.HasOne(x => x.Share)
+             .WithMany(s => s.Views)
+             .HasForeignKey(x => x.ShareId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => x.ShareId);
         });
 
@@ -346,8 +418,11 @@ public class AppDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+
+            e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
+
             e.HasIndex(x => x.TenantId);
-            e.HasIndex(x => x.Name).IsUnique();
+            e.HasIndex(x => new { x.TenantId, x.Name }).IsUnique();
         });
 
         // ─── Expense ───────────────────────────────────────────────────────
@@ -362,7 +437,9 @@ public class AppDbContext : DbContext
              .HasForeignKey(x => x.CategoryId)
              .OnDelete(DeleteBehavior.Restrict); // منع حذف تصنيف مستخدم في مصروفات
 
-            e.HasQueryFilter(x => !x.IsDeleted);
+            e.HasQueryFilter(x => !x.IsDeleted
+                && (x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin));
+
             e.HasIndex(x => x.CategoryId);
             e.HasIndex(x => x.TenantId);
             e.HasIndex(x => x.Date);

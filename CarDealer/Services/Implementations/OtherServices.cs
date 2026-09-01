@@ -16,16 +16,16 @@ public class CarImageService : ICarImageService
     private readonly AppDbContext _context;
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<CarImageService> _logger;
-
-    public CarImageService(AppDbContext context, IWebHostEnvironment env, ILogger<CarImageService> logger)
+    private readonly ICurrentTenantService _currentTenant;   // ← جديد
+    public CarImageService(AppDbContext context, IWebHostEnvironment env,
+     ILogger<CarImageService> logger, ICurrentTenantService currentTenant)
     {
-        _context = context;
-        _env = env;
-        _logger = logger;
+        _context = context; _env = env; _logger = logger; _currentTenant = currentTenant;
     }
     public async Task<List<CarImageDto>> UploadImagesAsync(int carId, List<IFormFile> files)
     {
-        var uploadPath = Path.Combine(_env.WebRootPath, "images", "cars");
+        var webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var uploadPath = Path.Combine(webRootPath, "images", "cars");
         Directory.CreateDirectory(uploadPath);
 
         var hasExistingImages = await _context.CarImages.AnyAsync(i => i.CarId == carId);
@@ -48,13 +48,19 @@ public class CarImageService : ICarImageService
             var imageUrl = $"/images/cars/{fileName}";
             var isPrimary = !hasExistingImages && i == 0;
 
-            var image = new CarImage { CarId = carId, ImageUrl = imageUrl, IsPrimary = isPrimary };
+            var image = new CarImage
+            {
+                CarId = carId,
+                ImageUrl = imageUrl,
+                IsPrimary = isPrimary,
+                TenantId = _currentTenant.TenantId
+            };
+
             _context.CarImages.Add(image);
-            
+            await _context.SaveChangesAsync();
 
             result.Add(new CarImageDto(image.Id, imageUrl, isPrimary));
         }
-        await _context.SaveChangesAsync();
         return result;
     }
 
@@ -122,8 +128,11 @@ public class CarImageService : ICarImageService
 public class CustomerService : ICustomerService
 {
     private readonly ICustomerRepository _repo;
-
-    public CustomerService(ICustomerRepository repo) => _repo = repo;
+    private readonly ICurrentTenantService _currentTenant;   // ← جديد
+    public CustomerService(ICustomerRepository repo, ICurrentTenantService currentTenant)
+    { _repo = repo; 
+        _currentTenant = currentTenant;
+    }
 
     public async Task<List<CustomerDto>> GetAllAsync() => await _repo.GetAllWithStatsAsync();
 
@@ -136,7 +145,13 @@ public class CustomerService : ICustomerService
 
     public async Task<CustomerDto> CreateAsync(CreateCustomerDto dto)
     {
-        var c = new Customer { Name = dto.Name, Phone = dto.Phone, Notes = dto.Notes };
+        var c = new Customer
+        {
+            Name = dto.Name,
+            Phone = dto.Phone,
+            Notes = dto.Notes,
+            TenantId = _currentTenant.TenantId
+        };   // ← جديد
         await _repo.AddAsync(c);
         await _repo.SaveChangesAsync();
         return new CustomerDto(c.Id, c.Name, c.Phone, c.Notes, 0);

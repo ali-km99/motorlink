@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using CarDealer.API.Data;
+using CarDealer.API.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +30,7 @@ public class PermissionClaimsTransformation : IClaimsTransformation
         // Get user from database to fetch TenantId and IsPlatformAdmin
         var user = await _context.Users
             .AsNoTracking()
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user is null)
@@ -65,8 +67,19 @@ public class PermissionClaimsTransformation : IClaimsTransformation
         // Add permission claims (existing functionality)
         if (!principal.HasClaim(c => c.Type == "permission"))
         {
-            var permissionCodes = await _context.UserPermissions
-                .Where(up => up.UserId == userId)
+            // نفلتر الصلاحيات حسب UserId
+            // بالنسبة للـ Staff: نفلتر حسب TenantId للمستخدم
+            // بالنسبة للـ PlatformAdmin: نأخذ كل الصلاحيات
+            IQueryable<UserPermission> query = _context.UserPermissions
+                .IgnoreQueryFilters()
+                .Where(up => up.UserId == userId);
+
+            if (!user.IsPlatformAdmin && user.TenantId.HasValue)
+            {
+                query = query.Where(up => up.TenantId == user.TenantId);
+            }
+
+            var permissionCodes = await query
                 .Select(up => up.Permission.Code)
                 .ToListAsync();
 

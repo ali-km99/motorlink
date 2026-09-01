@@ -12,6 +12,7 @@ namespace CarDealer.API.Services.Implementations
     {
         private readonly ICarRepository _carRepo;
         private readonly IMaintenanceRepository _maintenanceRepo;
+        private readonly ICurrentTenantService _currentTenant;
         private readonly IMaintenancePaymentRepository _paymentRepo;
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
@@ -21,12 +22,14 @@ namespace CarDealer.API.Services.Implementations
             ICarRepository carRepo,
             IMaintenanceRepository maintenanceRepo,
             IMaintenancePaymentRepository paymentRepo,
+             ICurrentTenantService currentTenant,
             AppDbContext context,
             IWebHostEnvironment env,
             ILogger<CarService> logger)
         {
             _carRepo = carRepo;
             _maintenanceRepo = maintenanceRepo;
+            _currentTenant = currentTenant;
             _paymentRepo = paymentRepo;
             _context = context;
             _env = env;
@@ -108,14 +111,14 @@ namespace CarDealer.API.Services.Implementations
                 HasInsurance = dto.HasInsurance,
                 HasCustomsClearance = dto.HasCustomsClearance,
                 PaymentMethod = dto.PaymentMethod,
+                TenantId = _currentTenant.TenantId,
                 CreatedAt = DateTime.UtcNow
             };
 
             if (dto.FeatureIds?.Any() == true)
             {
-                car.CarFeatures = dto.FeatureIds
-                    .Distinct()
-                    .Select(fId => new CarFeature { FeatureId = fId })
+                car.CarFeatures = dto.FeatureIds.Distinct()
+                    .Select(fId => new CarFeature { FeatureId = fId, TenantId = _currentTenant.TenantId })  // ← جديد
                     .ToList();
             }
 
@@ -138,6 +141,7 @@ namespace CarDealer.API.Services.Implementations
                     RelatedEntity = "Car",
                     RelatedId = car.Id,
                     Description = $"تكلفة شراء سيارة {car.Brand} {car.Model} {car.Year}",
+                    TenantId = _currentTenant.TenantId,
                     Date = DateTime.UtcNow
                 });
 
@@ -222,13 +226,10 @@ namespace CarDealer.API.Services.Implementations
                         .ToList();
 
                     var toAdd = incomingIds
-                        .Where(featureId => !existingIds.Contains(featureId))
-                        .Select(featureId => new CarFeature
-                        {
-                            CarId = id,
-                            FeatureId = featureId
-                        })
-                        .ToList();
+     .Where(featureId => !existingIds.Contains(featureId))
+     .Select(featureId => new CarFeature { CarId = id, FeatureId = featureId, TenantId = _currentTenant.TenantId })  // ← جديد
+     .ToList();
+
 
                     _context.CarFeatures.RemoveRange(toRemove);
 
@@ -277,6 +278,7 @@ namespace CarDealer.API.Services.Implementations
                                 RelatedId = car.Id,
                                 Description =
                                     $"تكلفة شراء سيارة {car.Brand} {car.Model} {car.Year}",
+                                TenantId = _currentTenant.TenantId,
                                 Date = DateTime.UtcNow
                             });
                         }

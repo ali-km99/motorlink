@@ -94,6 +94,7 @@ public class PermissionService : IPermissionService
 
             // استبدال كامل للصلاحيات (Replace-All Pattern) — أبسط وأضمن من مقارنة Diff
             await _context.UserPermissions
+                .IgnoreQueryFilters()
                 .Where(up => up.UserId == userId)
                 .ExecuteDeleteAsync();
 
@@ -114,6 +115,7 @@ public class PermissionService : IPermissionService
     public async Task<UserWithPermissionsDto?> GetUserWithPermissionsAsync(int userId)
     {
         var user = await _context.Users
+            .IgnoreQueryFilters()
             .Include(u => u.Permissions).ThenInclude(up => up.Permission)
             .FirstOrDefaultAsync(u => u.Id == userId);
 

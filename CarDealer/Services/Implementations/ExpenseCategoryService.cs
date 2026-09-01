@@ -3,14 +3,20 @@ using CarDealer.API.DTOs;
 using CarDealer.API.Entities;
 using CarDealer.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using CarDealer.API.Services;
 
 namespace CarDealer.API.Services.Implementations;
 
 public class ExpenseCategoryService : IExpenseCategoryService
 {
     private readonly AppDbContext _context;
+    private readonly ICurrentTenantService _currentTenant;
 
-    public ExpenseCategoryService(AppDbContext context) => _context = context;
+    public ExpenseCategoryService(AppDbContext context, ICurrentTenantService currentTenant)
+    {
+        _context = context;
+        _currentTenant = currentTenant;
+    }
 
     public async Task<List<ExpenseCategoryDto>> GetAllAsync() =>
         await _context.ExpenseCategories
@@ -29,7 +35,7 @@ public class ExpenseCategoryService : IExpenseCategoryService
         if (exists)
             throw new InvalidOperationException($"التصنيف '{name}' موجود مسبقًا.");
 
-        var category = new ExpenseCategory { Name = name };
+        var category = new ExpenseCategory { Name = name, TenantId = _currentTenant.TenantId };
         _context.ExpenseCategories.Add(category);
         await _context.SaveChangesAsync();
 

@@ -26,6 +26,7 @@ public class AuthService : IAuthService
     {
         // نجيب المستخدم بالـ Email — EF Core يستخدم Parameterized Queries تلقائياً (حماية SQL Injection)
         var user = await _context.Users
+     .IgnoreQueryFilters()          // ← إلزامي: البحث بالإيميل يحصل قبل معرفة أي Tenant
      .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
         if (user is null)
@@ -46,10 +47,8 @@ public class AuthService : IAuthService
     public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenDto dto)
     {
         var user = await _context.Users
-            .FirstOrDefaultAsync(u =>
-                u.RefreshToken == dto.RefreshToken &&
-                u.IsActive &&
-                u.RefreshTokenExpiry > DateTime.UtcNow);
+     .IgnoreQueryFilters()          // ← إلزامي، نفس السبب
+     .FirstOrDefaultAsync(u => u.RefreshToken == dto.RefreshToken && u.IsActive && u.RefreshTokenExpiry > DateTime.UtcNow);
 
         if (user is null)
             throw new UnauthorizedAccessException("Invalid or expired refresh token.");
@@ -117,14 +116,14 @@ public class AuthService : IAuthService
         if (slugExists)
             throw new InvalidOperationException("A dealership with this slug already exists.");
 
-        var emailExists = await _context.Users
-            .AnyAsync(u => u.Email == dto.OwnerEmail.ToLower());
+        var emailExists = await _context.Users.IgnoreQueryFilters()
+     .AnyAsync(u => u.Email == dto.OwnerEmail.ToLower());
 
         if (emailExists)
             throw new InvalidOperationException("Email already registered.");
 
-        var usernameExists = await _context.Users
-            .AnyAsync(u => u.Username == dto.OwnerUsername);
+        var usernameExists = await _context.Users.IgnoreQueryFilters()
+      .AnyAsync(u => u.Username == dto.OwnerUsername);
 
         if (usernameExists)
             throw new InvalidOperationException("Username already taken.");

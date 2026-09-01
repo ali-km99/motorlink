@@ -3,14 +3,20 @@ using CarDealer.API.DTOs;
 using CarDealer.API.Entities;
 using CarDealer.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using CarDealer.API.Services;
 
 namespace CarDealer.API.Services.Implementations;
 
 public class ExpenseService : IExpenseService
 {
     private readonly AppDbContext _context;
+    private readonly ICurrentTenantService _currentTenant;
 
-    public ExpenseService(AppDbContext context) => _context = context;
+    public ExpenseService(AppDbContext context, ICurrentTenantService currentTenant)
+    {
+        _context = context;
+        _currentTenant = currentTenant;
+    }
 
     public async Task<PagedResult<ExpenseDto>> GetAllAsync(ExpenseFilterDto filter)
     {
@@ -66,7 +72,8 @@ public class ExpenseService : IExpenseService
             Amount = dto.Amount,
             Description = dto.Description,
             Date = dto.Date ?? DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            TenantId = _currentTenant.TenantId
         };
 
         var strategy = _context.Database.CreateExecutionStrategy();
@@ -84,7 +91,8 @@ public class ExpenseService : IExpenseService
                 RelatedEntity = "Expense",
                 RelatedId = expense.Id,
                 Description = BuildDescription(category.Name, expense.Description),
-                Date = expense.Date
+                Date = expense.Date,
+                TenantId = _currentTenant.TenantId
             });
 
             await _context.SaveChangesAsync();

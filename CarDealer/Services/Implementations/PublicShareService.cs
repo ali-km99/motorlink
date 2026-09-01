@@ -5,6 +5,7 @@ using CarDealer.API.DTOs.PublicShare;
 using CarDealer.API.Entities;
 using CarDealer.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using CarDealer.API.Services;
 
 namespace CarDealer.API.Services.Implementations;
 
@@ -12,11 +13,14 @@ public class PublicShareService : IPublicShareService
 {
     private readonly IPublicShareRepository _shareRepo;
     private readonly AppDbContext _context;
+    private readonly ICurrentTenantService _currentTenant;
 
-    public PublicShareService(IPublicShareRepository shareRepo, AppDbContext context)
+    public PublicShareService(IPublicShareRepository shareRepo, AppDbContext context,
+        ICurrentTenantService currentTenant)
     {
         _shareRepo = shareRepo;
         _context = context;
+        _currentTenant = currentTenant;
     }
 
     public async Task<GenerateShareLinkResponseDto> GenerateLinkAsync(
@@ -34,7 +38,8 @@ public class PublicShareService : IPublicShareService
             ViewsCount = 0,
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = dto.ExpiresAt,
-            ContactAddress = dto.ContactAddress
+            ContactAddress = dto.ContactAddress,
+            TenantId = _currentTenant.TenantId
         };
 
         if (dto.Contacts?.Any() == true)
@@ -44,7 +49,8 @@ public class PublicShareService : IPublicShareService
                 {
                     Label = c.Label,
                     Value = c.Value,
-                    DisplayOrder = index
+                    DisplayOrder = index,
+                    TenantId = _currentTenant.TenantId
                 })
                 .ToList();
         }
@@ -77,7 +83,8 @@ public class PublicShareService : IPublicShareService
             ShareId = share.Id,
             IpAddress = ipAddress,
             UserAgent = userAgent,
-            ViewedAt = DateTime.UtcNow
+            ViewedAt = DateTime.UtcNow,
+            TenantId = share.TenantId
         });
         await _context.SaveChangesAsync();
 

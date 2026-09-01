@@ -14,6 +14,7 @@ public class MaintenanceService : IMaintenanceService
     private readonly IMaintenanceRepository _repo;
     private readonly IMaintenanceCenterRepository _centerRepo;
     private readonly IMaintenancePaymentRepository _paymentRepo;
+    private readonly ICurrentTenantService _currentTenant;   // ← جديد
     private readonly ICarRepository _carRepo;
     private readonly AppDbContext _context;
 
@@ -21,12 +22,14 @@ public class MaintenanceService : IMaintenanceService
         IMaintenanceRepository repo,
         IMaintenanceCenterRepository centerRepo,
         IMaintenancePaymentRepository paymentRepo,
+         ICurrentTenantService currentTenant,
         ICarRepository carRepo,
         AppDbContext context)
     {
         _repo = repo;
         _centerRepo = centerRepo;
         _paymentRepo = paymentRepo;
+       _currentTenant = currentTenant;
         _carRepo = carRepo;
         _context = context;
     }
@@ -65,7 +68,8 @@ public class MaintenanceService : IMaintenanceService
             CarId = car.Id,
             MaintenanceCenterId = center.Id,
             IssueDescription = dto.IssueDescription,
-            RepairCost = dto.RepairCost
+            RepairCost = dto.RepairCost,
+            TenantId = _currentTenant.TenantId   // ← جديد
         };
 
         var strategy = _context.Database.CreateExecutionStrategy();
@@ -84,11 +88,14 @@ public class MaintenanceService : IMaintenanceService
                     Amount = initialPaid,
                     PaymentDate = DateTime.UtcNow,
                     Notes = dto.PaymentNotes,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                     TenantId = _currentTenant.TenantId
                 };
 
-                await _paymentRepo.AddAsync(payment);
-                _context.Transactions.Add(MaintenanceMapping.ToPaymentTransaction(maintenance, payment));
+               await _paymentRepo.AddAsync(payment);
+                  var paymentTransaction = MaintenanceMapping.ToPaymentTransaction(maintenance, payment);
+                paymentTransaction.TenantId = _currentTenant.TenantId;   // ← جديد
+                _context.Transactions.Add(paymentTransaction);
                 await _context.SaveChangesAsync();
 
                 maintenance.Payments.Add(payment);
@@ -197,11 +204,14 @@ public class MaintenanceService : IMaintenanceService
                 Amount = dto.Amount,
                 PaymentDate = dto.PaymentDate ?? DateTime.UtcNow,
                 Notes = dto.Notes,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                TenantId = _currentTenant.TenantId
             };
 
             await _paymentRepo.AddAsync(payment);
-            _context.Transactions.Add(MaintenanceMapping.ToPaymentTransaction(maintenance, payment));
+            var paymentTransaction = MaintenanceMapping.ToPaymentTransaction(maintenance, payment);
+            paymentTransaction.TenantId = _currentTenant.TenantId;
+            _context.Transactions.Add(paymentTransaction);
             await _context.SaveChangesAsync();
             await dbTransaction.CommitAsync();
 

@@ -10,11 +10,14 @@ public class MaintenanceCenterService : IMaintenanceCenterService
 {
     private readonly IMaintenanceCenterRepository _repo;
     private readonly AppDbContext _context;
+    private readonly ICurrentTenantService _currentTenant;
 
-    public MaintenanceCenterService(IMaintenanceCenterRepository repo, AppDbContext context)
+    public MaintenanceCenterService(IMaintenanceCenterRepository repo, AppDbContext context,
+        ICurrentTenantService currentTenant)
     {
         _repo = repo;
         _context = context;
+        _currentTenant = currentTenant;
     }
 
     public async Task<List<MaintenanceCenterDto>> GetAllAsync()
@@ -41,7 +44,8 @@ public class MaintenanceCenterService : IMaintenanceCenterService
         var center = new MaintenanceCenter
         {
             Name = name,
-            Notes = dto.Notes
+            Notes = dto.Notes,
+            TenantId = _currentTenant.TenantId
         };
 
         if (dto.Phones?.Any() == true)
@@ -51,7 +55,8 @@ public class MaintenanceCenterService : IMaintenanceCenterService
                 {
                     Label = p.Label.Trim(),
                     PhoneNumber = p.PhoneNumber.Trim(),
-                    DisplayOrder = index
+                    DisplayOrder = index,
+                    TenantId = _currentTenant.TenantId
                 })
                 .ToList();
         }
@@ -89,7 +94,8 @@ public class MaintenanceCenterService : IMaintenanceCenterService
                     MaintenanceCenterId = center.Id,
                     Label = p.Label.Trim(),
                     PhoneNumber = p.PhoneNumber.Trim(),
-                    DisplayOrder = index
+                    DisplayOrder = index,
+                    TenantId = _currentTenant.TenantId
                 })
                 .ToList()
             : new List<MaintenanceCenterPhone>();

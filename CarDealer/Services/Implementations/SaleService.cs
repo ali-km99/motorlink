@@ -4,6 +4,7 @@ using CarDealer.API.Entities;
 using CarDealer.API.Repositories.Interfaces;
 using CarDealer.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using CarDealer.API.Services;
 
 namespace CarDealer.API.Services.Implementations
 {
@@ -15,14 +16,17 @@ namespace CarDealer.API.Services.Implementations
         private readonly ICarRepository _carRepo;
         private readonly IMaintenanceRepository _maintenanceRepo;
         private readonly AppDbContext _context;
+        private readonly ICurrentTenantService _currentTenant;
 
         public SaleService(ISaleRepository saleRepo, ICarRepository carRepo,
-            IMaintenanceRepository maintenanceRepo, AppDbContext context)
+            IMaintenanceRepository maintenanceRepo, AppDbContext context,
+            ICurrentTenantService currentTenant)
         {
             _saleRepo = saleRepo;
             _carRepo = carRepo;
             _maintenanceRepo = maintenanceRepo;
             _context = context;
+            _currentTenant = currentTenant;
         }
 
         public async Task<List<SaleListDto>> GetAllAsync() =>
@@ -61,7 +65,8 @@ namespace CarDealer.API.Services.Implementations
                 CustomerId = dto.CustomerId,
                 SoldPrice = dto.SoldPrice,
                 Notes = dto.Notes,
-                SoldDate = DateTime.UtcNow
+                SoldDate = DateTime.UtcNow,
+                TenantId = _currentTenant.TenantId
             };
 
             await _saleRepo.AddAsync(sale);
@@ -92,7 +97,8 @@ namespace CarDealer.API.Services.Implementations
                 Description = profit >= 0
                     ? $"بيع سيارة: {car.Brand} {car.Model} {car.Year} (ربح: {profit:N0})"
                     : $"بيع سيارة: {car.Brand} {car.Model} {car.Year} (خسارة: {Math.Abs(profit):N0})",
-                Date = DateTime.UtcNow
+                Date = DateTime.UtcNow,
+                TenantId = _currentTenant.TenantId
             });
 
             await _context.SaveChangesAsync();
