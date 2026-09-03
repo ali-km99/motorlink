@@ -23,6 +23,7 @@ public class MaintenanceDebtsController : ControllerBase
     // GET /api/maintenance-debts?centerId=&carId=&status=&dateFrom=&dateTo=
     [HttpGet]
     [HasPermission(PermissionCodes.MaintenanceView)]
+    [RequiresFeature(FeatureCodes.MaintenanceDebtReports)]
     [ProducesResponseType(typeof(ApiResponse<MaintenanceDebtReportDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDebts([FromQuery] MaintenanceDebtFilterDto filter)
     {

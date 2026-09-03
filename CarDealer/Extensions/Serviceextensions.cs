@@ -70,7 +70,8 @@ public static class ServiceExtensions
         // Multi-tenant services
         services.AddScoped<ICurrentTenantService, CurrentTenantService>();
         services.AddHttpContextAccessor();
-        
+        services.AddScoped<ITenantFeatureService, TenantFeatureService>();
+
         return services;
     }
 

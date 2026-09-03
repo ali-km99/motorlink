@@ -39,6 +39,8 @@ public class AppDbContext : DbContext
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     public DbSet<MarketplaceUser> MarketplaceUsers => Set<MarketplaceUser>();
+    public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
+    public DbSet<TenantSubscription> TenantSubscriptions => Set<TenantSubscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -362,6 +364,78 @@ public class AppDbContext : DbContext
             e.HasQueryFilter(x => x.TenantId == _currentTenant.TenantId || _currentTenant.IsPlatformAdmin);
 
             e.HasIndex(x => new { x.UserId, x.PermissionId }).IsUnique();
+        });
+
+        // ─── SubscriptionPlan (عالمي — لا TenantId، لا فلتر) ─────────────
+        modelBuilder.Entity<SubscriptionPlan>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Code).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.HasIndex(x => x.Code).IsUnique();
+
+            e.HasData(
+                new SubscriptionPlan
+                {
+                    Id = 1,
+                    Code = "Basic",
+                    Name = "الأساسية",
+                    IsActive = true,
+                    AllowMaintenanceDebtReports = false,
+                    AllowPublicSharing = false,
+                    AllowExpensesModule = false
+                },
+                new SubscriptionPlan
+                {
+                    Id = 2,
+                    Code = "Professional",
+                    Name = "الاحترافية",
+                    IsActive = true,
+                    AllowMaintenanceDebtReports = true,
+                    AllowPublicSharing = true,
+                    AllowExpensesModule = false
+                },
+                new SubscriptionPlan
+                {
+                    Id = 3,
+                    Code = "Business",
+                    Name = "الأعمال",
+                    IsActive = true,
+                    AllowMaintenanceDebtReports = true,
+                    AllowPublicSharing = true,
+                    AllowExpensesModule = true
+                }
+            );
+        });
+
+        // ─── TenantSubscription — عمداً بلا HasQueryFilter تلقائي ─────────
+        // (يُدار من SuperAdmin عبر كل المعارض، أو يُفحص للمعرض الحالي بفلترة صريحة عبر ITenantFeatureService)
+        modelBuilder.Entity<TenantSubscription>(e =>
+        {
+            e.HasKey(x => x.Id);
+
+            e.HasOne(x => x.Tenant)
+             .WithMany()
+             .HasForeignKey(x => x.TenantId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.SubscriptionPlan)
+             .WithMany(p => p.TenantSubscriptions)
+             .HasForeignKey(x => x.SubscriptionPlanId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasIndex(x => x.TenantId);
+            e.HasIndex(x => new { x.TenantId, x.IsActive });
+
+            // Tenant الافتراضي (Id=1) يُربط تلقائياً بخطة Business — حتى لا تنكسر بيئة التطوير الحالية
+            e.HasData(new TenantSubscription
+            {
+                Id = 1,
+                TenantId = 1,
+                SubscriptionPlanId = 3,
+                IsActive = true,
+                StartedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            });
         });
 
         modelBuilder.Entity<PublicShare>(e =>

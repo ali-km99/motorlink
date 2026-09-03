@@ -120,7 +120,15 @@ app.MapFallback(async context =>
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Database migration failed:");
+        Console.WriteLine(ex.Message);
+    }
 }
 
 app.Run();
