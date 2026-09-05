@@ -1,4 +1,4 @@
-﻿using CarDealer.API.Entities;
+﻿using CarDealer.API.Features.PublicSharing.Entities;
 
 public interface IPublicShareRepository
 {

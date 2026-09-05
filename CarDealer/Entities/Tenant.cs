@@ -1,3 +1,12 @@
+using CarDealer.API.Features.Cars.Entities;
+using CarDealer.API.Features.Customers.Entities;
+using CarDealer.API.Features.Expenses.Entities;
+using CarDealer.API.Features.Maintenance.Entities;
+using CarDealer.API.Features.PublicSharing.Entities;
+using CarDealer.API.Features.Sales.Entities;
+using CarDealer.API.Features.Transactions.Entities;
+using CarDealer.API.Features.Users.Entities;
+
 namespace CarDealer.API.Entities
 {
     /// <summary>
@@ -18,7 +27,7 @@ namespace CarDealer.API.Entities
         public ICollection<Car> Cars { get; set; } = new List<Car>();
         public ICollection<Customer> Customers { get; set; } = new List<Customer>();
         public ICollection<Sale> Sales { get; set; } = new List<Sale>();
-        public ICollection<Maintenance> Maintenances { get; set; } = new List<Maintenance>();
+        public ICollection<MaintenanceEntity> Maintenances { get; set; } = new List<MaintenanceEntity>();
         public ICollection<MaintenanceCenter> MaintenanceCenters { get; set; } = new List<MaintenanceCenter>();
         public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
         public ICollection<ExpenseCategory> ExpenseCategories { get; set; } = new List<ExpenseCategory>();

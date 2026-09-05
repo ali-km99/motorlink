@@ -4,6 +4,7 @@ using CarDealer.API.Entities;
 using CarDealer.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using CarDealer.API.Common;
+using CarDealer.API.Features.Users.Entities;
 namespace CarDealer.API.Services;
 
 public class AuthService : IAuthService

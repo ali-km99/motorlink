@@ -1,5 +1,5 @@
 ﻿using CarDealer.API.Data;
-using CarDealer.API.Entities;
+using CarDealer.API.Features.PublicSharing.Entities;
 using Microsoft.EntityFrameworkCore;
 
 public class PublicShareRepository : IPublicShareRepository

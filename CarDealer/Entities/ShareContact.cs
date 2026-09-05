@@ -1,4 +1,6 @@
-﻿namespace CarDealer.API.Entities;
+﻿using CarDealer.API.Features.PublicSharing.Entities;
+
+namespace CarDealer.API.Entities;
 
 public class ShareContact
 {

@@ -1,5 +1,14 @@
 ﻿using CarDealer.API.Common;
 using CarDealer.API.Entities;
+using CarDealer.API.Features.Cars.Entities;
+using CarDealer.API.Features.Customers.Entities;
+using CarDealer.API.Features.Expenses.Entities;
+using CarDealer.API.Features.Maintenance.Entities;
+using CarDealer.API.Features.Marketplace.Entities;
+using CarDealer.API.Features.PublicSharing.Entities;
+using CarDealer.API.Features.Sales.Entities;
+using CarDealer.API.Features.Transactions.Entities;
+using CarDealer.API.Features.Users.Entities;
 using CarDealer.API.Services;
 
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +32,7 @@ public class AppDbContext : DbContext
     public DbSet<CarComment> CarComments => Set<CarComment>();
     public DbSet<Feature> Features => Set<Feature>();
     public DbSet<CarFeature> CarFeatures => Set<CarFeature>();
-    public DbSet<Maintenance> Maintenances => Set<Maintenance>();
+    public DbSet<MaintenanceEntity> Maintenances => Set<MaintenanceEntity>();
     public DbSet<MaintenanceCenter> MaintenanceCenters => Set<MaintenanceCenter>();
     public DbSet<MaintenanceCenterPhone> MaintenanceCenterPhones => Set<MaintenanceCenterPhone>();
     public DbSet<MaintenancePayment> MaintenancePayments => Set<MaintenancePayment>();
@@ -208,7 +217,7 @@ public class AppDbContext : DbContext
         });
 
         // ─── Maintenance ───────────────────────────────────────────────────
-        modelBuilder.Entity<Maintenance>(e =>
+        modelBuilder.Entity<MaintenanceEntity>(e =>
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.IssueDescription).HasMaxLength(500).IsRequired();

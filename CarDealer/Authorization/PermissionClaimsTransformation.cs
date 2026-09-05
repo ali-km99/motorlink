@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using CarDealer.API.Data;
-using CarDealer.API.Entities;
+using CarDealer.API.Features.Users.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 

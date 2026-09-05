@@ -1,4 +1,4 @@
-﻿using CarDealer.API.DTOs;
+﻿using CarDealer.API.Features.Expenses.DTOs;
 using FluentValidation;
 
 namespace CarDealer.API.Validators;

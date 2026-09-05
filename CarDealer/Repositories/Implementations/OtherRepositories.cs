@@ -1,6 +1,9 @@
 ﻿using CarDealer.API.Data;
-using CarDealer.API.DTOs;
-using CarDealer.API.Entities;
+using CarDealer.API.Features.Customers.DTOs;
+using CarDealer.API.Features.Customers.Entities;
+using CarDealer.API.Features.Customers.Repositories.Interfaces;
+using CarDealer.API.Features.Sales.DTOs;
+using CarDealer.API.Features.Sales.Entities;
 using CarDealer.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,37 +41,3 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
             .FirstOrDefaultAsync(s => s.CarId == carId);
 }
 
-// ─── Customer Repository ───────────────────────────────────────────────────────
-
-public class CustomerRepository : Repository<Customer>, ICustomerRepository
-{
-    public CustomerRepository(AppDbContext context) : base(context) { }
-
-    public async Task<List<CustomerDto>> GetAllWithStatsAsync()
-    {
-        var customers = await _context.Customers
-            .AsNoTracking()
-            .OrderBy(c => c.Name)
-            .Select(c => new { c.Id, c.Name, c.Phone, c.Notes })
-            .ToListAsync();
-
-        var salesCounts = await _context.Sales
-            .AsNoTracking()
-            .GroupBy(s => s.CustomerId)
-            .Select(g => new { CustomerId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.CustomerId, x => x.Count);
-
-        return customers.Select(c => new CustomerDto(
-            c.Id,
-            c.Name,
-            c.Phone,
-            c.Notes,
-            salesCounts.TryGetValue(c.Id, out var count) ? count : 0
-        )).ToList();
-    }
-
-    public async Task<Customer?> GetByPhoneAsync(string phone) =>
-        await _context.Customers
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Phone == phone);
-}
