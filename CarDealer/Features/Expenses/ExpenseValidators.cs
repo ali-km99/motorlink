@@ -1,7 +1,7 @@
 ﻿using CarDealer.API.Features.Expenses.DTOs;
 using FluentValidation;
 
-namespace CarDealer.API.Validators;
+namespace CarDealer.API.Features.Expenses;
 
 public class CreateExpenseValidator : AbstractValidator<CreateExpenseDto>
 {

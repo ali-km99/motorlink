@@ -1,7 +1,7 @@
 using CarDealer.API.Features.Auth.DTOs;
 using FluentValidation;
 
-namespace CarDealer.API.Validators;
+namespace CarDealer.API.Features.Auth;
 
 public class LoginValidator : AbstractValidator<LoginDto>
 {
