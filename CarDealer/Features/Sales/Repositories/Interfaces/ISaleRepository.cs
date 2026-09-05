@@ -2,7 +2,7 @@
 using CarDealer.API.Features.Sales.Entities;
 using CarDealer.API.Shared.Repositories;
 
-namespace CarDealer.API.Repositories.Interfaces
+namespace CarDealer.API.Features.Sales.Repositories.Interfaces
 {
     // ─── Sale Repository ───────────────────────────────────────────────────────────
 

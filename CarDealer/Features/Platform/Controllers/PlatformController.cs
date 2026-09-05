@@ -1,5 +1,4 @@
-﻿
-using CarDealer.API.Features.Platform.DTOs;
+﻿using CarDealer.API.Features.Platform.DTOs;
 using CarDealer.API.Features.Platform.Entities;
 using CarDealer.API.Shared.Common;
 using CarDealer.API.Shared.Data;
@@ -8,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarDealer.API.Controllers;
+namespace CarDealer.API.Features.Platform.Controllers;
 
 [ApiController]
 [Route("api/platform")]

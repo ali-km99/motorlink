@@ -1,11 +1,11 @@
 ﻿using CarDealer.API.Features.Sales.DTOs;
 using CarDealer.API.Features.Sales.Entities;
-using CarDealer.API.Repositories.Interfaces;
+using CarDealer.API.Features.Sales.Repositories.Interfaces;
 using CarDealer.API.Shared.Data;
 using CarDealer.API.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarDealer.API.Repositories;
+namespace CarDealer.API.Features.Sales.Repositories.Implementations;
 
 // ─── Sale Repository ───────────────────────────────────────────────────────────
 
