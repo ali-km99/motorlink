@@ -1,8 +1,8 @@
-﻿using CarDealer.API.Data;
-using CarDealer.API.Features.Dashboard.DTOs;
+﻿using CarDealer.API.Features.Dashboard.DTOs;
 using CarDealer.API.Features.Dashboard.Services.Interfaces;
 using CarDealer.API.Features.Maintenance.Repositories.Interfaces;
-using CarDealer.API.Services;
+using CarDealer.API.Shared.Data;
+using CarDealer.API.Shared.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarDealer.API.Features.Dashboard.Services.Implementations

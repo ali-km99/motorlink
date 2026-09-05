@@ -1,8 +1,9 @@
-﻿using CarDealer.API.Common;
-using CarDealer.API.Data;
-using CarDealer.API.DTOs;
-using CarDealer.API.DTOs.Subscription;
-using CarDealer.API.Entities;
+﻿
+using CarDealer.API.Features.Platform.DTOs;
+using CarDealer.API.Features.Platform.Entities;
+using CarDealer.API.Shared.Common;
+using CarDealer.API.Shared.Data;
+using CarDealer.API.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

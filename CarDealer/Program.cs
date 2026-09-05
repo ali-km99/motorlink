@@ -1,6 +1,6 @@
-﻿using CarDealer.API.Data;
-using CarDealer.API.Extensions;
-using CarDealer.API.Middleware;
+﻿using CarDealer.API.Extensions;
+using CarDealer.API.Shared.Data;
+using CarDealer.API.Shared.Middlewares;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.RateLimiting;

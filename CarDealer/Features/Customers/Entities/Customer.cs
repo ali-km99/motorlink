@@ -1,5 +1,5 @@
-﻿using CarDealer.API.Entities;
-using CarDealer.API.Features.Sales.Entities;
+﻿using CarDealer.API.Features.Sales.Entities;
+using CarDealer.API.Shared.Entities;
 
 namespace CarDealer.API.Features.Customers.Entities
 {

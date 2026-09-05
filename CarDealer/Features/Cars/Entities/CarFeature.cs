@@ -1,4 +1,4 @@
-﻿using CarDealer.API.Entities;
+﻿using CarDealer.API.Shared.Entities;
 
 namespace CarDealer.API.Features.Cars.Entities
 {

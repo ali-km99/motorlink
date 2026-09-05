@@ -1,8 +1,8 @@
-﻿using CarDealer.API.Common;
-using CarDealer.API.Data;
+﻿using CarDealer.API.Features.Auth.Services.Interfaces;
 using CarDealer.API.Features.Marketplace.DTOs;
 using CarDealer.API.Features.Marketplace.Entities;
-using CarDealer.API.Services.Interfaces;
+using CarDealer.API.Shared.Common;
+using CarDealer.API.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 
 public class MarketplaceAuthService : IMarketplaceAuthService

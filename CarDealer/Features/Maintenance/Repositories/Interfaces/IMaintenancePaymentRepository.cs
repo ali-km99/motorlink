@@ -1,5 +1,5 @@
 using CarDealer.API.Features.Maintenance.Entities;
-using CarDealer.API.Repositories.Interfaces;
+using CarDealer.API.Shared.Repositories;
 
 namespace CarDealer.API.Features.Maintenance.Repositories.Interfaces;
 

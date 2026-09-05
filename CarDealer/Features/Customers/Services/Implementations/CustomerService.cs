@@ -2,7 +2,7 @@
 using CarDealer.API.Features.Customers.Entities;
 using CarDealer.API.Features.Customers.Repositories.Interfaces;
 using CarDealer.API.Features.Customers.Services.Interfaces;
-using CarDealer.API.Services;
+using CarDealer.API.Shared.Services.Interfaces;
 
 namespace CarDealer.API.Features.Customers.Services.Implementations
 {

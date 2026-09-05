@@ -1,6 +1,6 @@
-﻿using CarDealer.API.Common;
-using CarDealer.API.DTOs;
-using CarDealer.API.Features.Users.DTOs;
+﻿using CarDealer.API.Features.Users.DTOs;
+using CarDealer.API.Shared.Common;
+using CarDealer.API.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

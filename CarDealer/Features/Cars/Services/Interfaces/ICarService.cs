@@ -1,5 +1,5 @@
-﻿using CarDealer.API.DTOs;
-using CarDealer.API.Features.Cars.DTOs;
+﻿using CarDealer.API.Features.Cars.DTOs;
+using CarDealer.API.Shared.DTOs;
 
 
 namespace CarDealer.API.Features.Cars.Services.Interfaces;

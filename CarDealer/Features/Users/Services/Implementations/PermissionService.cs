@@ -1,10 +1,9 @@
-﻿using CarDealer.API.Data;
-
-using Microsoft.EntityFrameworkCore;
-using CarDealer.API.Common;
-using CarDealer.API.Services;
+﻿using Microsoft.EntityFrameworkCore;
 using CarDealer.API.Features.Users.DTOs;
 using CarDealer.API.Features.Users.Entities;
+using CarDealer.API.Shared.Common;
+using CarDealer.API.Shared.Services.Interfaces;
+using CarDealer.API.Shared.Data;
 public class PermissionService : IPermissionService
 {
     private readonly AppDbContext _context;

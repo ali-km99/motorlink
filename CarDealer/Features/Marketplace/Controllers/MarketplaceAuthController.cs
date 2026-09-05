@@ -1,6 +1,5 @@
-﻿using CarDealer.API.DTOs;
-using CarDealer.API.Features.Marketplace.DTOs;
-using CarDealer.API.Services.Interfaces;
+﻿using CarDealer.API.Features.Marketplace.DTOs;
+using CarDealer.API.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 public class MarketplaceAuthController : ControllerBase
 {
     private readonly IMarketplaceAuthService _authService;
-    public MarketplaceAuthController(IMarketplaceAuthService authService) => _authService = authService;
+    public MarketplaceAuthController(IMarketplaceAuthService authService)
+    {
+        _authService = authService;
+    }
 
     [HttpPost("register")]
     [AllowAnonymous]

@@ -1,12 +1,12 @@
-using CarDealer.API.Data;
 using CarDealer.API.Features.Maintenance.Entities;
 using CarDealer.API.Features.Maintenance.Repositories.Interfaces;
-using CarDealer.API.Repositories;
+using CarDealer.API.Shared.Data;
+using CarDealer.API.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarDealer.API.Features.Maintenance.Repositories.Implementations;
 
-public class MaintenanceCenterRepository : Repository<MaintenanceCenter>, IMaintenanceCenterRepository
+public class MaintenanceCenterRepository : GenericRepository<MaintenanceCenter>, IMaintenanceCenterRepository
 {
     public MaintenanceCenterRepository(AppDbContext context) : base(context) { }
 

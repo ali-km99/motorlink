@@ -1,8 +1,8 @@
-using CarDealer.API.Authorization;
-using CarDealer.API.Common;
-using CarDealer.API.DTOs;
 using CarDealer.API.Features.Maintenance.DTOs;
 using CarDealer.API.Features.Maintenance.Services.Interfaces;
+using CarDealer.API.Shared.Authorization;
+using CarDealer.API.Shared.Common;
+using CarDealer.API.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,10 +16,7 @@ public class MaintenanceDebtsController : ControllerBase
 {
     private readonly IMaintenanceService _maintenanceService;
 
-    public MaintenanceDebtsController(IMaintenanceService maintenanceService)
-    {
-        _maintenanceService = maintenanceService;
-    }
+    public MaintenanceDebtsController(IMaintenanceService maintenanceService) => _maintenanceService = maintenanceService;
 
     // GET /api/maintenance-debts?centerId=&carId=&status=&dateFrom=&dateTo=
     [HttpGet]

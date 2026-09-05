@@ -1,8 +1,8 @@
-﻿using CarDealer.API.Authorization;
-using CarDealer.API.Common;
-using CarDealer.API.DTOs;
-using CarDealer.API.Features.Cars.DTOs;
+﻿using CarDealer.API.Features.Cars.DTOs;
 using CarDealer.API.Features.Cars.Services.Interfaces;
+using CarDealer.API.Shared.Authorization;
+using CarDealer.API.Shared.Common;
+using CarDealer.API.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -44,7 +44,7 @@ public class CarImagesController : ControllerBase
     [HasPermission(PermissionCodes.CarsDelete)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int carId, int imageId)
+    public async Task<IActionResult> Delete(int carId,int imageId)
     {
         var deleted = await _imageService.DeleteImageAsync(imageId);
         if (!deleted)

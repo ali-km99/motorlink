@@ -1,6 +1,6 @@
 ﻿using Azure.Core;
-using CarDealer.API.DTOs;
 using CarDealer.API.Features.PublicSharing.DTOs;
+using CarDealer.API.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;

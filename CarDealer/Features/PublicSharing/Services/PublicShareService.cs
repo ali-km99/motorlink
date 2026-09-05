@@ -1,13 +1,10 @@
-﻿using CarDealer.API.Common;
-using CarDealer.API.Data;
-
-using CarDealer.API.Entities;
-
-using Microsoft.EntityFrameworkCore;
-using CarDealer.API.Services;
+﻿using Microsoft.EntityFrameworkCore;
 using CarDealer.API.Features.PublicSharing.DTOs;
 using CarDealer.API.Features.PublicSharing.Entities;
 using CarDealer.API.Features.Cars.DTOs;
+using CarDealer.API.Shared.Common;
+using CarDealer.API.Shared.Services.Interfaces;
+using CarDealer.API.Shared.Data;
 
 namespace CarDealer.API.Features.PublicSharing.Services;
 
@@ -46,15 +43,14 @@ public class PublicShareService : IPublicShareService
 
         if (dto.Contacts?.Any() == true)
         {
-            share.Contacts = dto.Contacts
+            share.Contacts = [.. dto.Contacts
                 .Select((c, index) => new ShareContact
                 {
                     Label = c.Label,
                     Value = c.Value,
                     DisplayOrder = index,
                     TenantId = _currentTenant.TenantId
-                })
-                .ToList();
+                })];
         }
 
         await _shareRepo.AddAsync(share);

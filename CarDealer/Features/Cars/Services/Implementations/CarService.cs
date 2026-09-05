@@ -1,7 +1,4 @@
-﻿using CarDealer.API.Data;
-using CarDealer.API.DTOs;
-using CarDealer.API.Entities;
-using CarDealer.API.Features.Cars.DTOs;
+﻿using CarDealer.API.Features.Cars.DTOs;
 using CarDealer.API.Features.Cars.Entities;
 using CarDealer.API.Features.Cars.Repositories.Interfaces;
 using CarDealer.API.Features.Cars.Services.Interfaces;
@@ -9,7 +6,9 @@ using CarDealer.API.Features.Maintenance;
 using CarDealer.API.Features.Maintenance.Repositories.Interfaces;
 using CarDealer.API.Features.Sales.DTOs;
 using CarDealer.API.Features.Transactions.Entities;
-using CarDealer.API.Services;
+using CarDealer.API.Shared.Data;
+using CarDealer.API.Shared.DTOs;
+using CarDealer.API.Shared.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarDealer.API.Features.Cars.Services.Implementations
@@ -122,9 +121,7 @@ namespace CarDealer.API.Features.Cars.Services.Implementations
 
             if (dto.FeatureIds?.Any() == true)
             {
-                car.CarFeatures = dto.FeatureIds.Distinct()
-                    .Select(fId => new CarFeature { FeatureId = fId, TenantId = _currentTenant.TenantId })  // ← جديد
-                    .ToList();
+                car.CarFeatures = [.. dto.FeatureIds.Distinct().Select(fId => new CarFeature { FeatureId = fId, TenantId = _currentTenant.TenantId })];
             }
 
             var strategy = _context.Database.CreateExecutionStrategy();
@@ -219,7 +216,7 @@ namespace CarDealer.API.Features.Cars.Services.Implementations
 
                     var incomingIds =
                         dto.FeatureIds?.Distinct().ToList()
-                        ?? new List<int>();
+                        ?? [];
 
                     var existingIds =
                         car.CarFeatures

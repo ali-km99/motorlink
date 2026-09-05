@@ -1,5 +1,5 @@
-﻿using CarDealer.API.Authorization;
-using CarDealer.API.Data;
+﻿using CarDealer.API.Features.Auth.Services.Implementations;
+using CarDealer.API.Features.Auth.Services.Interfaces;
 using CarDealer.API.Features.Cars;
 using CarDealer.API.Features.Cars.Repositories.Implementations;
 using CarDealer.API.Features.Cars.Repositories.Interfaces;
@@ -17,15 +17,17 @@ using CarDealer.API.Features.Maintenance.Repositories.Implementations;
 using CarDealer.API.Features.Maintenance.Repositories.Interfaces;
 using CarDealer.API.Features.Maintenance.Services.Implementations;
 using CarDealer.API.Features.Maintenance.Services.Interfaces;
+using CarDealer.API.Features.Platform.Services;
 using CarDealer.API.Features.PublicSharing.Services;
 using CarDealer.API.Features.Sales.Services;
 using CarDealer.API.Features.Transactions.Services.Implementations;
 using CarDealer.API.Features.Transactions.Services.Interfaces;
 using CarDealer.API.Repositories;
 using CarDealer.API.Repositories.Interfaces;
-using CarDealer.API.Services;
-using CarDealer.API.Services.Interfaces;
-
+using CarDealer.API.Shared.Authorization;
+using CarDealer.API.Shared.Data;
+using CarDealer.API.Shared.Services.Implementations;
+using CarDealer.API.Shared.Services.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;

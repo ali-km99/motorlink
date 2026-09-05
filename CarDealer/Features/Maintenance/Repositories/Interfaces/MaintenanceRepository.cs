@@ -1,8 +1,8 @@
-﻿
-using CarDealer.API.Repositories.Interfaces;
-namespace CarDealer.API.Features.Maintenance.Repositories.Interfaces
+﻿namespace CarDealer.API.Features.Maintenance.Repositories.Interfaces
 {
 using CarDealer.API.Features.Maintenance.Entities;
+    using CarDealer.API.Shared.Repositories;
+
     public interface IMaintenanceRepository : IRepository<MaintenanceEntity>
     {
         Task<List<MaintenanceEntity>> GetByCarIdAsync(int carId);

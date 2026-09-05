@@ -1,7 +1,7 @@
-﻿using CarDealer.API.Data;
-using CarDealer.API.Features.Cars.DTOs;
+﻿using CarDealer.API.Features.Cars.DTOs;
 using CarDealer.API.Features.Cars.Entities;
 using CarDealer.API.Features.Cars.Services.Interfaces;
+using CarDealer.API.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarDealer.API.Features.Cars.Services.Implementations;

@@ -1,14 +1,14 @@
-﻿using CarDealer.API.Data;
-using CarDealer.API.DTOs;
-using CarDealer.API.Features.Cars.DTOs;
+﻿using CarDealer.API.Features.Cars.DTOs;
 using CarDealer.API.Features.Cars.Entities;
 using CarDealer.API.Features.Cars.Repositories.Interfaces;
-using CarDealer.API.Repositories;
+using CarDealer.API.Shared.Data;
+using CarDealer.API.Shared.DTOs;
+using CarDealer.API.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarDealer.API.Features.Cars.Repositories.Implementations;
 
-public class CarRepository : Repository<Car>, ICarRepository
+public class CarRepository : GenericRepository<Car>, ICarRepository
 {
     public CarRepository(AppDbContext context) : base(context) { }
 

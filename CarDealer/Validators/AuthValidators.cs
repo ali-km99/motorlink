@@ -1,4 +1,4 @@
-using CarDealer.API.DTOs.Auth;
+using CarDealer.API.Features.Auth.DTOs;
 using FluentValidation;
 
 namespace CarDealer.API.Validators;

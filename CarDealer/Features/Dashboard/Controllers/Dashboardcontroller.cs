@@ -1,8 +1,8 @@
-﻿using CarDealer.API.Authorization;
-using CarDealer.API.Common;
-using CarDealer.API.DTOs;
-using CarDealer.API.Features.Dashboard.DTOs;
+﻿using CarDealer.API.Features.Dashboard.DTOs;
 using CarDealer.API.Features.Dashboard.Services.Interfaces;
+using CarDealer.API.Shared.Authorization;
+using CarDealer.API.Shared.Common;
+using CarDealer.API.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,10 +16,7 @@ public class DashboardController : ControllerBase
 {
     private readonly IDashboardService _dashboardService;
 
-    public DashboardController(IDashboardService dashboardService)
-    {
-        _dashboardService = dashboardService;
-    }
+    public DashboardController(IDashboardService dashboardService) => _dashboardService = dashboardService;
 
     // GET /api/dashboard/stats
     [HttpGet("stats")]

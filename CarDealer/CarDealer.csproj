@@ -18,8 +18,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="DTOs\Auth\" />
+	  <Folder Include="Entities\" />
 	  <Folder Include="Features\Dashboard\Entities\" />
 	  <Folder Include="Migrations\" />
+	  <Folder Include="Shared\Data\EntityConfigurations\" />
 	  <Folder Include="wwwroot\images\" />
 	</ItemGroup>
 

@@ -1,7 +1,7 @@
-﻿using CarDealer.API.DTOs;
-using CarDealer.API.Features.Cars.DTOs;
+﻿using CarDealer.API.Features.Cars.DTOs;
 using CarDealer.API.Features.Cars.Entities;
-using CarDealer.API.Repositories.Interfaces;
+using CarDealer.API.Shared.DTOs;
+using CarDealer.API.Shared.Repositories;
 
 namespace CarDealer.API.Features.Cars.Repositories.Interfaces
 {

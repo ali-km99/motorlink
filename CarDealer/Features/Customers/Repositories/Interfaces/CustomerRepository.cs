@@ -1,6 +1,6 @@
 ﻿using CarDealer.API.Features.Customers.DTOs;
 using CarDealer.API.Features.Customers.Entities;
-using CarDealer.API.Repositories.Interfaces;
+using CarDealer.API.Shared.Repositories;
 
 namespace CarDealer.API.Features.Customers.Repositories.Interfaces
 {
