@@ -59,7 +59,7 @@ public class AppDbContext : DbContext
     public DbSet<MarketplaceUser> MarketplaceUsers => Set<MarketplaceUser>();
     public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
     public DbSet<TenantSubscription> TenantSubscriptions => Set<TenantSubscription>();
-
+    public DbSet<MarketplaceVisit> MarketplaceVisits => Set<MarketplaceVisit>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -92,5 +92,6 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new MarketplaceUserConfiguration());
         modelBuilder.ApplyConfiguration(new SubscriptionPlanConfiguration());
         modelBuilder.ApplyConfiguration(new TenantSubscriptionConfiguration());
+        modelBuilder.ApplyConfiguration(new MarketplaceVisitConfiguration());
     }
 }

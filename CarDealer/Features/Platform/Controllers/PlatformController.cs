@@ -1,5 +1,6 @@
 ﻿using CarDealer.API.Features.Platform.DTOs;
 using CarDealer.API.Features.Platform.Entities;
+using CarDealer.API.Features.Platform.Services;
 using CarDealer.API.Shared.Common;
 using CarDealer.API.Shared.Data;
 using CarDealer.API.Shared.DTOs;
@@ -15,7 +16,13 @@ namespace CarDealer.API.Features.Platform.Controllers;
 public class PlatformController : ControllerBase
 {
     private readonly AppDbContext _context;
-    public PlatformController(AppDbContext context) => _context = context;
+    private readonly IPlatformDashboardService _dashboardService;
+
+    public PlatformController(AppDbContext context, IPlatformDashboardService dashboardService)
+    {
+        _context = context;
+        _dashboardService = dashboardService;
+    }
 
     // GET /api/platform/subscription-plans
     [HttpGet("subscription-plans")]
@@ -109,5 +116,22 @@ public class PlatformController : ControllerBase
 
         await _context.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(null!, "تم تعطيل الاشتراك"));
+    }
+
+    // GET /api/platform/dashboard?preset=Last30Days
+    // GET /api/platform/dashboard?preset=SpecificMonth&year=2026&month=8
+    // GET /api/platform/dashboard?preset=Custom&from=2026-01-01&to=2026-03-31
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboard([FromQuery] PlatformDashboardFilterDto filter)
+    {
+        try
+        {
+            var result = await _dashboardService.GetDashboardAsync(filter);
+            return Ok(ApiResponse<PlatformDashboardDto>.Ok(result));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
     }
 }

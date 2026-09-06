@@ -20,7 +20,6 @@
 	<ItemGroup>
 	  <Folder Include="Features\Dashboard\Entities\" />
 	  <Folder Include="Migrations\" />
-	  <Folder Include="Shared\Data\EntityConfigurations\" />
 	  <Folder Include="wwwroot\images\" />
 	</ItemGroup>
 

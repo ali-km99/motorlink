@@ -3,7 +3,7 @@ using CarDealer.API.Shared.Data;
 using CarDealer.API.Shared.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarDealer.API.Features.Platform.Services;
+namespace CarDealer.API.Features.Platform.Services.Implementations;
 
 public class TenantFeatureService : ITenantFeatureService
 {

@@ -49,6 +49,13 @@ public class MarketplaceAuthService : IMarketplaceAuthService
             throw new UnauthorizedAccessException("Invalid email or password.");
 
         user.LastLoginAt = DateTime.UtcNow;
+
+        _context.MarketplaceVisits.Add(new MarketplaceVisit
+        {
+            MarketplaceUserId = user.Id,
+            VisitedAt = DateTime.UtcNow
+        });
+
         var response = BuildResponse(user);
         await _context.SaveChangesAsync();
         return response;

@@ -18,6 +18,7 @@ using CarDealer.API.Features.Maintenance.Repositories.Interfaces;
 using CarDealer.API.Features.Maintenance.Services.Implementations;
 using CarDealer.API.Features.Maintenance.Services.Interfaces;
 using CarDealer.API.Features.Platform.Services;
+using CarDealer.API.Features.Platform.Services.Implementations;
 using CarDealer.API.Features.PublicSharing.Services;
 using CarDealer.API.Features.Sales.Repositories.Implementations;
 using CarDealer.API.Features.Sales.Repositories.Interfaces;
@@ -92,7 +93,7 @@ public static class ServiceExtensions
         services.AddScoped<ICurrentTenantService, CurrentTenantService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantFeatureService, TenantFeatureService>();
-
+        services.AddScoped<IPlatformDashboardService, PlatformDashboardService>();
         return services;
     }
 
